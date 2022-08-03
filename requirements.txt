@@ -1,7 +1,0 @@
-# --------- pytorch-ie ------- #
-pytorch-ie>=0.8.0,<0.9
-
-# --------- others --------- #
-pre-commit      # hooks for applying linters on commit
-pytest          # tests
-pytest-cov      # test coverage
