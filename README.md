@@ -6,6 +6,10 @@ A collection of utilities to easy the usage of [pytorch-ie](https://github.com/C
 ```bash
 pip install git+https://github.com/ArneBinder/pie-utils.git
 ```
+or
+```bash
+pip install git+ssh://git@github.com/ArneBinder/pie-utils.git
+```
 
 ## Development Setup
 
