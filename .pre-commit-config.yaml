@@ -81,7 +81,7 @@ repos:
         args:
           - --skip=logs/**,data/**
           # - --ignore-words-list=abc,def
-          
+
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.971
