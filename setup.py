@@ -32,8 +32,6 @@ setup(
     long_description_content_type="text/markdown",
     package_dir={"": "src"},
     packages=find_packages("src"),
-    install_requires=["pytorch-lightning", "hydra-core"],
-    packages=find_packages(),
     python_requires=">=3.9.0",
     install_requires=REQUIRED_PKGS,
     extras_require=EXTRAS_REQUIRE,
