@@ -2,7 +2,7 @@
 
 # pie-utils
 
-A collection of utilities to easy the usage of [pytorch-ie](https://github.com/ChristophAlt/pytorch-ie).
+A collection of utilities to ease the usage of [pytorch-ie](https://github.com/ChristophAlt/pytorch-ie).
 
 ## Setup
 
