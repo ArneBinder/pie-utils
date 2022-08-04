@@ -9,10 +9,12 @@ from pie_utils.statistics import WithStatistics
 
 logger = logging.getLogger(__name__)
 
+DatasetDict = Dict[str, Dataset]
+
 
 def create_train_test_split(
-    dataset: Dict[str, Dataset], split_name: str, **train_test_split_kwargs
-):
+    dataset: DatasetDict, split_name: str, **train_test_split_kwargs
+) -> DatasetDict:
     """This method divides a dataset using a given split_name into train and test split of given
     length. It then returns new dataset with train and test split of required length.
 
@@ -38,10 +40,10 @@ def create_train_test_split(
 
 
 def process_documents(
-    dataset: Dict[str, Dataset],
+    dataset: DatasetDict,
     document_processors: Dict[str, Callable[[Document], Document]],
     single_map: bool = True,
-):
+) -> DatasetDict:
     """This method uses given document processors to update each document of the dataset and
     returns updated dataset.
 
@@ -82,9 +84,9 @@ def process_documents(
 
 
 def process_datasets(
-    dataset: Dict[str, Dataset],
+    dataset: DatasetDict,
     dataset_processors: Dict[str, Callable[[Dataset], Optional[Dataset]]],
-):
+) -> DatasetDict:
     """This method can update different splits of dataset using given dataset processors and
     consequently returns updated or same dataset.
 
@@ -103,7 +105,7 @@ def process_datasets(
     return new_dataset
 
 
-def rename_splits(dataset: Dict[str, Dataset], names: Dict[str, str]):
+def rename_splits(dataset: DatasetDict, names: Dict[str, str]) -> DatasetDict:
     """This method renames the split name of the given data using a dictionary mapping and returns
     updated dataset.
 

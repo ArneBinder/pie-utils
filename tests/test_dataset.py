@@ -9,13 +9,13 @@ from pytorch_ie.annotations import LabeledSpan
 from pytorch_ie.core import AnnotationList, Document, annotation_field
 from pytorch_ie.documents import TextDocument
 
-from pie_utils.statistics import WithStatistics
 from pie_utils.dataset import (
     create_train_test_split,
     process_datasets,
     process_documents,
     rename_splits,
 )
+from pie_utils.statistics import WithStatistics
 
 logger = logging.getLogger(__name__)
 
