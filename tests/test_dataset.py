@@ -115,6 +115,8 @@ def test_process_datasets(dataset):
     text_length dataset processor calculates mean text length in the dataset. Each split in the
     given dataset should have a positive mean text length.
     """
-    new_dataset = process_datasets(dataset, dataset_processors={"text length": collect_mean_text_lengths})
+    new_dataset = process_datasets(
+        dataset, dataset_processors={"text length": collect_mean_text_lengths}
+    )
     for k, v in new_dataset.items():
         assert v == dataset[k]
