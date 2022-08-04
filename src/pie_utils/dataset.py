@@ -50,7 +50,8 @@ def process_documents(
     single_map: if True (default), create a single mapping function from all document_processors and apply that
     """
 
-    def _process_document(doc: Document) -> Document:
+    # test coverage is not captured for functions passed to Dataset.map
+    def _process_document(doc: Document) -> Document:  # pragma: no cover
         for p_name, p in document_processors.items():
             doc = p(doc)
         return doc
