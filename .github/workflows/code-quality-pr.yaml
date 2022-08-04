@@ -20,6 +20,10 @@ jobs:
 
       - uses: ryan-rozario/pipreqs-action-cpy@master
 
+      - name: Show requirements.txt
+        run: |
+          cat requirements.txt
+
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
