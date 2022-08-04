@@ -1,7 +1,12 @@
 import pytest
 from pytorch_ie.utils.span import has_overlap
 
-from pie_utils.span.slice import is_contained_in, distance_center, distance_outer, distance_inner
+from pie_utils.span.slice import (
+    distance_center,
+    distance_inner,
+    distance_outer,
+    is_contained_in,
+)
 
 
 def test_has_overlap():
