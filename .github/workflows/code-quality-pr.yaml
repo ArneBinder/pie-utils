@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - uses: ryan-rozario/pipreqs-action-cpy@master
+      - uses: ArneBinder/pipreqs-action-cpy@master
 
       - name: Show requirements.txt
         run: |
