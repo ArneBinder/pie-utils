@@ -2,6 +2,7 @@ import pytest
 from pytorch_ie.utils.span import has_overlap
 
 from pie_utils.span.slice import (
+    distance,
     distance_center,
     distance_inner,
     distance_outer,
@@ -111,3 +112,21 @@ def test_distance_inner():
     other_start_end = (0, 3)
     distance = distance_inner(start_end, other_start_end)
     assert distance == 1
+
+
+@pytest.mark.parametrize("distance_type", ["inner", "outer", "center", "up"])
+def test_distance(distance_type):
+    start_end = (0, 4)
+    other_start_end = (6, 10)
+    if distance_type == "up":
+        with pytest.raises(ValueError) as e:
+            distance(start_end, other_start_end, distance_type)
+            assert e.value == "unknown distance_type=up. use one of: center, inner, outer"
+    else:
+        distance_ = distance(start_end, other_start_end, distance_type)
+        if distance_type == "inner":
+            assert distance_ == 2.0
+        elif distance_type == "outer":
+            assert distance_ == 10.0
+        else:
+            assert distance_ == 6.0
