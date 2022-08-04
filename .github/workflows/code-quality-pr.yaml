@@ -37,7 +37,7 @@ jobs:
 
       - name: remove requirements.txt
         run: |
-          cat requirements.txt
+          rm requirements.txt
 
       - name: Find modified files
         id: file_changes
