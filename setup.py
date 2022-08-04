@@ -23,7 +23,7 @@ EXTRAS_REQUIRE = {
 
 setup(
     name="pie-utils",
-    version="0.0.0",
+    version="0.1.1",
     description="A collection of utilities to easy the usage of PyTorch-IE",
     author="Arne Binder",
     author_email="arne.b.binder@gmail.com",
