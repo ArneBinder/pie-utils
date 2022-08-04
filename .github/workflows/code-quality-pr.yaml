@@ -35,6 +35,10 @@ jobs:
           pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
           pip install ".[dev]"
 
+      - name: remove requirements.txt
+        run: |
+          cat requirements.txt
+
       - name: Find modified files
         id: file_changes
         uses: trilom/file-changes-action@v1.2.4
