@@ -15,12 +15,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - uses: ryan-rozario/pipreqs-action-cpy@master
+
+      - name: Show requirements.txt
+        run: |
+          cat requirements.txt
+
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
           cache: "pip"
-          cache-dependency-path: "setup.py"
+
       - run: |
           python -m pip install --upgrade pip
           pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
