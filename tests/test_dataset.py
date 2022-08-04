@@ -1,4 +1,6 @@
+import logging
 from dataclasses import dataclass
+from typing import Optional
 
 import datasets
 import pytest
@@ -7,12 +9,15 @@ from pytorch_ie.annotations import LabeledSpan
 from pytorch_ie.core import AnnotationList, Document, annotation_field
 from pytorch_ie.documents import TextDocument
 
-from src.pie_utils.dataset import (
+from pie_utils.statistics import WithStatistics
+from pie_utils.dataset import (
     create_train_test_split,
     process_datasets,
     process_documents,
     rename_splits,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
@@ -59,10 +64,17 @@ class CoNLL2003Document(TextDocument):
     entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
 
 
-class CopyAnnotationToPredictionsDocumentPreprocessor:
+class CopyAnnotationToPredictionsDocumentPreprocessor(WithStatistics):
+    def reset_statistics(self):
+        self.num_copied = 0
+
+    def show_statistics(self, description: Optional[str] = None):
+        logger.info(f"number of copied entities: {self.num_copied}")
+
     def __call__(self, document: CoNLL2003Document) -> CoNLL2003Document:
         entities = list(document.entities)
         document.entities.predictions.extend(entities)
+        self.num_copied += len(entities)
         return document
 
 

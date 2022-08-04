@@ -5,6 +5,8 @@ from typing import Callable, Dict, Optional
 from pytorch_ie import Dataset
 from pytorch_ie.core import Document
 
+from pie_utils.statistics import WithStatistics
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,12 +62,22 @@ def process_documents(
     if single_map:
         logger.info(f"call document preprocessors: {list(document_processors)}")
         for s, d in new_dataset.items():
+            for p_name, p in document_processors.items():
+                if isinstance(p, WithStatistics):
+                    p.reset_statistics()
             new_dataset[s] = d.map(_process_document)
+            for p_name, p in document_processors.items():
+                if isinstance(p, WithStatistics):
+                    p.show_statistics(f"Statistics for {p_name} at split {s}")
     else:
         for p_name, p in document_processors.items():
             logger.info(f"call document preprocessor: {p_name}")
             for s, d in new_dataset.items():
+                if isinstance(p, WithStatistics):
+                    p.reset_statistics()
                 new_dataset[s] = d.map(p)
+                if isinstance(p, WithStatistics):
+                    p.show_statistics(f"Statistics for {p_name} at split {s}")
     return new_dataset
 
 
