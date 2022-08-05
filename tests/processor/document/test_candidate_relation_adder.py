@@ -6,7 +6,7 @@ from pytorch_ie.annotations import BinaryRelation, LabeledSpan, Span
 from pytorch_ie.core import AnnotationList, annotation_field
 from pytorch_ie.documents import TextDocument
 
-from src.processor.document.candidate_relation_adder import CandidateRelationAdder
+from pie_utils.processor.document.candidate_relation_adder import CandidateRelationAdder
 
 TEXT_01 = "Jane lives in Berlin. this is no sentence about Karl\n"
 TEXT_02 = "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
