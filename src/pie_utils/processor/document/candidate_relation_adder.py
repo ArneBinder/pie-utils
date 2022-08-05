@@ -18,6 +18,24 @@ logger = logging.getLogger(__name__)
 
 
 class CandidateRelationAdder(WithStatistics):
+    """CandidateRelationAdder adds relations to a document based on various parameters. It goes
+    through combinations of available entities as possible candidates for new relations. It selects
+    a new relation if the distance between the two entities is less than max distance allowed.
+    However, there is an upper bound on number of new relations that can be added, it should be
+    either total combination possible or k times number of available relations (whichever is min).
+    k is added_rels_upper_bound_factor parameter here.
+
+    params:
+        label: label for the new relations to be added
+        use_partition: decides whether to use available partitions in the document or use whole document as single
+                    partition
+        max_distance: maximum distance allowed between two entities to form a new relation
+        distance_type: type of distance to be calculated between two entities, it can be inner, outer or center
+        added_rels_upper_bound_factor: factor to decide upper bound for number of new relations
+        collect_statistics: decides whether advance statistics to be collected or not
+        sort_by_distance: decides if candidates relations to be orders in sorted manner or not
+    """
+
     def __init__(
         self,
         label: str = "no_relation",
