@@ -32,102 +32,19 @@ ENTITY_TEXT_03_KARL = LabeledSpan(start=0, end=4, label="person")
 ENTITY_TEXT_03_BERLIN = LabeledSpan(start=26, end=32, label="city")
 TEXT_03_SENTENCE1 = LabeledSpan(start=0, end=33, label="sentence")
 
-TEXT_01_TOKENS = [
-    "[CLS]",
-    "Jane",
-    "lives",
-    "in",
-    "Berlin",
-    ".",
-    "this",
-    "is",
-    "no",
-    "sentence",
-    "about",
-    "Karl",
-    "[SEP]",
-]
-TEXT_02_TOKENS = [
-    "[CLS]",
-    "Seattle",
-    "is",
-    "a",
-    "rainy",
-    "city",
-    ".",
-    "Jenny",
-    "Du",
-    "##rka",
-    "##n",
-    "is",
-    "the",
-    "city",
-    "'",
-    "s",
-    "mayor",
-    ".",
-    "[SEP]",
-]
-TEXT_03_TOKENS = ["[CLS]", "Karl", "enjoys", "sunny", "days", "in", "Berlin", ".", "[SEP]"]
+
+@dataclasses.dataclass
+class TestDocument(TextDocument):
+    partition: AnnotationList[Span] = annotation_field(target="text")
+    entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
+    relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
 
 
-@pytest.fixture
-def candidate_relation_adder():
-    return CandidateRelationAdder(
+def test_candidate_relation_adder():
+    candidate_relation_adder = CandidateRelationAdder(
         label="no_relation",
         collect_statistics=True,
     )
-
-
-@pytest.fixture
-def candidate_relation_adder_with_statistics():
-    return CandidateRelationAdder(
-        label="no_relation",
-        collect_statistics=True,
-        max_distance=8,
-    )
-
-
-@pytest.fixture
-def candidate_relation_adder_without_sort_by_distance():
-    return CandidateRelationAdder(
-        label="no_relation",
-        sort_by_distance=False,
-    )
-
-
-@pytest.fixture
-def candidate_relation_adder_with_no_relation_upper_bound():
-    return CandidateRelationAdder(
-        label="no_relation",
-        added_relations_upper_bound_factor=3,
-    )
-
-
-@pytest.fixture
-def candidate_relation_adder_with_partition():
-    return CandidateRelationAdder(
-        label="no_relation",
-        use_partition=True,
-    )
-
-
-@pytest.fixture
-def candidate_relation_adder_with_partition_and_max_distance():
-    return CandidateRelationAdder(
-        label="no_relation",
-        use_partition=True,
-        max_distance=8,
-    )
-
-
-def test_candidate_relation_adder(candidate_relation_adder):
-    @dataclasses.dataclass
-    class TestDocument(TextDocument):
-        partition: AnnotationList[Span] = annotation_field(target="text")
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-        relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
-
     document = TestDocument(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
@@ -169,12 +86,12 @@ def test_candidate_relation_adder(candidate_relation_adder):
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_statistics(candidate_relation_adder_with_statistics):
-    @dataclasses.dataclass
-    class TestDocument(TextDocument):
-        partition: AnnotationList[Span] = annotation_field(target="text")
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-        relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
+def test_candidate_relation_adder_with_statistics():
+    candidate_relation_adder_with_statistics = CandidateRelationAdder(
+        label="no_relation",
+        collect_statistics=True,
+        max_distance=8,
+    )
 
     document = TestDocument(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
@@ -205,14 +122,11 @@ def test_candidate_relation_adder_with_statistics(candidate_relation_adder_with_
         assert e.value == "type of given key str or value float is incorrect."
 
 
-def test_candidate_relation_adder_without_sort_by_distance(
-    candidate_relation_adder_without_sort_by_distance,
-):
-    @dataclasses.dataclass
-    class TestDocument(TextDocument):
-        partition: AnnotationList[Span] = annotation_field(target="text")
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-        relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
+def test_candidate_relation_adder_without_sort_by_distance():
+    candidate_relation_adder_without_sort_by_distance = CandidateRelationAdder(
+        label="no_relation",
+        sort_by_distance=False,
+    )
 
     document = TestDocument(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
@@ -245,14 +159,11 @@ def test_candidate_relation_adder_without_sort_by_distance(
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_no_relation_upper_bound(
-    candidate_relation_adder_with_no_relation_upper_bound,
-):
-    @dataclasses.dataclass
-    class TestDocument(TextDocument):
-        partition: AnnotationList[Span] = annotation_field(target="text")
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-        relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
+def test_candidate_relation_adder_with_no_relation_upper_bound():
+    candidate_relation_adder_with_no_relation_upper_bound = CandidateRelationAdder(
+        label="no_relation",
+        added_relations_upper_bound_factor=3,
+    )
 
     document = TestDocument(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
@@ -284,12 +195,11 @@ def test_candidate_relation_adder_with_no_relation_upper_bound(
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_partitions(candidate_relation_adder_with_partition):
-    @dataclasses.dataclass
-    class TestDocument(TextDocument):
-        partition: AnnotationList[Span] = annotation_field(target="text")
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-        relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
+def test_candidate_relation_adder_with_partitions():
+    candidate_relation_adder_with_partition = CandidateRelationAdder(
+        label="no_relation",
+        use_partition=True,
+    )
 
     document = TestDocument(text=TEXT_02)
     document.entities.extend([ENTITY_TEXT_02_SEATTLE, ENTITY_TEXT_02_JENNY])
@@ -315,16 +225,14 @@ def test_candidate_relation_adder_with_partitions(candidate_relation_adder_with_
     assert len(partition) == 2
 
 
-def test_candidate_relation_adder_with_partitions_and_max_distance(
-    candidate_relation_adder_with_partition_and_max_distance,
-):
+def test_candidate_relation_adder_with_partitions_and_max_distance():
     # Along with the partition, now we check if a new candidate relation meets max_distance condition or not. That means
     # the inner distance between arguments of a relation should be less than max_distance.
-    @dataclasses.dataclass
-    class TestDocument(TextDocument):
-        partition: AnnotationList[Span] = annotation_field(target="text")
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-        relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
+    candidate_relation_adder_with_partition_and_max_distance = CandidateRelationAdder(
+        label="no_relation",
+        use_partition=True,
+        max_distance=8,
+    )
 
     document = TestDocument(text=TEXT_03)
     document.entities.extend([ENTITY_TEXT_03_KARL, ENTITY_TEXT_03_BERLIN])
