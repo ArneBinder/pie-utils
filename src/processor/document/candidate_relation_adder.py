@@ -26,51 +26,6 @@ class DocumentWithEntitiesRelationsAndPartition(TextDocument):
 
 
 class CandidateRelationAdder(WithStatistics):
-    def reset_statistics(self):
-        self._statistics: dict[str, Any] = {
-            "num_total_relation_candidates": 0,
-            "num_available_relations": 0,
-            "available_rels_within_allowed_distance": 0,
-            "num_added_relation_not_taken": 0,
-            "num_rels_within_allowed_distance": 0,
-            "num_candidates_not_taken": defaultdict(int),
-            "distances_taken": defaultdict(list),
-        }
-
-    def show_statistics(self, description: str | None = None):
-        description = description or "Statistics"
-        logger.info(f"{description}: \n{json.dumps(self._statistics, indent=2)}")
-
-    @overload
-    def update_statistics(self, key: str, value: int):
-        pass
-
-    @overload
-    def update_statistics(self, key: str, value: dict[str, list]):
-        pass
-
-    @overload
-    def update_statistics(self, key: str, value: dict[str, int]):
-        pass
-
-    def update_statistics(self, key: str, value: int | dict[str, list] | dict[str, int]):
-        if isinstance(value, int):
-            self._statistics[key] += value
-        elif isinstance(value, Dict):
-            for k, v in value.items():
-                if isinstance(v, List):
-                    self._statistics[key][k] += v
-                elif isinstance(v, int):
-                    self._statistics[key][k] += v
-                else:
-                    raise TypeError(
-                        f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
-                    )
-        else:
-            raise TypeError(
-                f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
-            )
-
     def __init__(
         self,
         label: str = "no_relation",
@@ -89,6 +44,40 @@ class CandidateRelationAdder(WithStatistics):
         self.collect_statistics = collect_statistics
         self.sort_by_distance = sort_by_distance
         self.reset_statistics()
+
+    def reset_statistics(self):
+        self._statistics: dict[str, Any] = {
+            "num_total_relation_candidates": 0,
+            "num_available_relations": 0,
+            "available_rels_within_allowed_distance": 0,
+            "num_added_relation_not_taken": 0,
+            "num_rels_within_allowed_distance": 0,
+            "num_candidates_not_taken": defaultdict(int),
+            "distances_taken": defaultdict(list),
+        }
+
+    def show_statistics(self, description: str | None = None):
+        description = description or "Statistics"
+        logger.info(f"{description}: \n{json.dumps(self._statistics, indent=2)}")
+
+    def update_statistics(self, key: str, value: int | dict[str, list] | dict[str, int]):
+        if self.collect_statistics:
+            if isinstance(value, int):
+                self._statistics[key] += value
+            elif isinstance(value, Dict):
+                for k, v in value.items():
+                    if isinstance(v, List):
+                        self._statistics[key][k] += v
+                    elif isinstance(v, int):
+                        self._statistics[key][k] += v
+                    else:
+                        raise TypeError(
+                            f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
+                        )
+            else:
+                raise TypeError(
+                    f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
+                )
 
     def __call__(
         self,
