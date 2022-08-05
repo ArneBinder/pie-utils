@@ -1,11 +1,9 @@
 import copy
-import dataclasses
 
 import pytest
-from pytorch_ie.annotations import BinaryRelation, LabeledSpan, Span
-from pytorch_ie.core import AnnotationList, annotation_field
-from pytorch_ie.documents import TextDocument
+from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 
+from pie_utils.processor.document import DocumentWithEntitiesRelationsAndPartition
 from pie_utils.processor.document.candidate_relation_adder import CandidateRelationAdder
 
 TEXT_01 = "Jane lives in Berlin. this is no sentence about Karl\n"
@@ -33,19 +31,12 @@ ENTITY_TEXT_03_BERLIN = LabeledSpan(start=26, end=32, label="city")
 TEXT_03_SENTENCE1 = LabeledSpan(start=0, end=33, label="sentence")
 
 
-@dataclasses.dataclass
-class TestDocument(TextDocument):
-    partition: AnnotationList[Span] = annotation_field(target="text")
-    entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-    relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
-
-
 def test_candidate_relation_adder():
     candidate_relation_adder = CandidateRelationAdder(
         label="no_relation",
         collect_statistics=True,
     )
-    document = TestDocument(text=TEXT_01)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
     document.partition.append(TEXT_01_SENTENCE1)
@@ -93,7 +84,7 @@ def test_candidate_relation_adder_with_statistics():
         max_distance=8,
     )
 
-    document = TestDocument(text=TEXT_01)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
     document.partition.append(TEXT_01_SENTENCE1)
@@ -128,7 +119,7 @@ def test_candidate_relation_adder_without_sort_by_distance():
         sort_by_distance=False,
     )
 
-    document = TestDocument(text=TEXT_01)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
     document.partition.append(TEXT_01_SENTENCE1)
@@ -165,7 +156,7 @@ def test_candidate_relation_adder_with_no_relation_upper_bound():
         added_relations_upper_bound_factor=3,
     )
 
-    document = TestDocument(text=TEXT_01)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
     document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
     document.partition.append(TEXT_01_SENTENCE1)
@@ -201,7 +192,7 @@ def test_candidate_relation_adder_with_partitions():
         use_partition=True,
     )
 
-    document = TestDocument(text=TEXT_02)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_02)
     document.entities.extend([ENTITY_TEXT_02_SEATTLE, ENTITY_TEXT_02_JENNY])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
     document.partition.extend([TEXT_02_SENTENCE1, TEXT_02_SENTENCE2])
@@ -234,7 +225,7 @@ def test_candidate_relation_adder_with_partitions_and_max_distance():
         max_distance=8,
     )
 
-    document = TestDocument(text=TEXT_03)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_03)
     document.entities.extend([ENTITY_TEXT_03_KARL, ENTITY_TEXT_03_BERLIN])
     document.partition.append(TEXT_03_SENTENCE1)
 

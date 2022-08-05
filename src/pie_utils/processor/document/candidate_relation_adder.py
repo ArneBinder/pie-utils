@@ -4,25 +4,17 @@ import json
 import logging
 import random
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import Any, Dict, List, overload
+from typing import Any, Dict, List
 
-from pytorch_ie.annotations import BinaryRelation, LabeledSpan, Span
-from pytorch_ie.core import AnnotationList, annotation_field
-from pytorch_ie.documents import TextDocument
+from pytorch_ie.annotations import BinaryRelation, Span
 from pytorch_ie.utils.span import is_contained_in
 
 from pie_utils.span.slice import distance
 from pie_utils.statistics import WithStatistics
 
+from ..document import DocumentWithEntitiesRelationsAndPartition
+
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class DocumentWithEntitiesRelationsAndPartition(TextDocument):
-    entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-    relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
-    partition: AnnotationList[Span] = annotation_field(target="text")
 
 
 class CandidateRelationAdder(WithStatistics):
