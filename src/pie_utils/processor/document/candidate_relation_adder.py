@@ -38,7 +38,7 @@ class CandidateRelationAdder(WithStatistics):
         sort_by_distance: This parameter decides if candidates entity pairs is to be ordered in sorted manner or not.
                         Sorting is done based on the distance between the entity pairs. It may restrict entity pairs with
                         large distance to be added if it is enabled.
-        collect_statistics: This parameter decides whether advance statistics to be collected or not. Few terms to know
+        collect_statistics: This parameter defines whether advanced statistics are collected or not. Few terms to know
                             in order to understand the statistics properly:
                             1. available relations: relations which are part of the document originally.
                             2. candidate relations: possible entity pairs in the document. This includes available
