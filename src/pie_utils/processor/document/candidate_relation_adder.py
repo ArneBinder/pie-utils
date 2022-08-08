@@ -56,7 +56,7 @@ class CandidateRelationAdder(WithStatistics):
                         5. num_rels_within_allowed_distance: Number of candidate entity pairs whose distance is less
                                                             than max_distance.
                         6. num_candidates_not_taken: Candidate relations not taken due to exceeding max_distance or
-                                                    upper bound on allowed new relations. It is a dictionary which
+                                                    upper bound on allowed new relations. It is a dictionary with
                                                     relation label as key and number of such relations not taken as value
                         7. distances_taken: Dictionary containing relation label as key and list of distances between
                                             the entity pairs of corresponding relations.
