@@ -25,7 +25,8 @@ class CandidateRelationAdder(WithStatistics):
     params:
         label: label for the new relations to be added
         use_partition: A boolean parameter to enable partition wise relation creation. If this parameter is enabled then
-                    it uses available partitions in the document otherwise use whole document as single partition
+                    it uses available partitions in the document otherwise use whole document as single partition. Note
+                    that entity pairs which belong to the same partition are considered for the creation of new relations.
         max_distance: An optional parameter which restricts the maximum distance between candidate entity pair to form a
                     new relation. If distance between entity pair is more than the value of this parameter then candidate
                     pair is discarded.
@@ -33,8 +34,10 @@ class CandidateRelationAdder(WithStatistics):
                     important to note that value for max_distance parameter should be given keeping value of this parameter
                     in mind.
         added_rels_upper_bound_factor: It is an optional parameter used to calculate the upper bound for the number of
-                                    new relations that can be added. Upper bound is either total combination possible or
-                                     value of this parameter times number of available relations (whichever is min)
+                                    new relations that can be added. Upper bound is calculated as,
+                                                n = k * num_available_relations
+                                    where n is upper bound, k is added_rels_upper_bound_factor and see collect_statistics
+                                    for num_available_relations.
         sort_by_distance: This parameter decides if candidates entity pairs is to be ordered in sorted manner or not.
                         Sorting is done based on the distance between the entity pairs. It may restrict entity pairs with
                         large distance to be added if it is enabled.
