@@ -29,9 +29,7 @@ class CandidateRelationAdder(WithStatistics):
         max_distance: An optional parameter which restricts the maximum distance between candidate entity pair to form a
                     new relation. If distance between entity pair is more than the value of this parameter then candidate
                     pair is discarded.
-        distance_type: type of distance to be calculated between two entities, it can be inner, outer or center. It is
-                    important to note that value for max_distance parameter should be given keeping value of this parameter
-                    in mind.
+        distance_type: The type of distance to be calculated between two entities when using max_distance. It can be inner (inner), outer or center.
         added_rels_upper_bound_factor: It is an optional parameter used to calculate the upper bound for the number of
                                     new relations that can be added. Upper bound is calculated as,
                                                 n = k * num_available_relations
