@@ -18,22 +18,48 @@ logger = logging.getLogger(__name__)
 
 
 class CandidateRelationAdder(WithStatistics):
-    """CandidateRelationAdder adds relations to a document based on various parameters. It goes
-    through combinations of available entities as possible candidates for new relations. It selects
-    a new relation if the distance between the two entities is less than max distance allowed.
-    However, there is an upper bound on number of new relations that can be added, it should be
-    either total combination possible or k times number of available relations (whichever is min).
-    k is added_rels_upper_bound_factor parameter here.
+    """CandidateRelationAdder adds binary relations to a document based on various parameters. It
+    goes through combinations of available entity pairs as possible candidates for new relations.
+    Entity pairs which are already part of document as a relation are not added again.
 
     params:
         label: label for the new relations to be added
-        use_partition: decides whether to use available partitions in the document or use whole document as single
-                    partition
-        max_distance: maximum distance allowed between two entities to form a new relation
-        distance_type: type of distance to be calculated between two entities, it can be inner, outer or center
-        added_rels_upper_bound_factor: factor to decide upper bound for number of new relations
-        collect_statistics: decides whether advance statistics to be collected or not
-        sort_by_distance: decides if candidates relations to be orders in sorted manner or not
+        use_partition: A boolean parameter to enable partition wise relation creation. If this parameter is enabled then
+                    it uses available partitions in the document otherwise use whole document as single partition
+        max_distance: An optional parameter which restricts the maximum distance between candidate entity pair to form a
+                    new relation. If distance between entity pair is more than the value of this parameter then candidate
+                    pair is discarded.
+        distance_type: type of distance to be calculated between two entities, it can be inner, outer or center. It is
+                    important to note that value for max_distance parameter should be given keeping value of this parameter
+                    in mind.
+        added_rels_upper_bound_factor: It is an optional parameter used to calculate the upper bound for the number of
+                                    new relations that can be added. Upper bound is either total combination possible or
+                                     value of this parameter times number of available relations (whichever is min)
+        sort_by_distance: This parameter decides if candidates entity pairs is to be ordered in sorted manner or not.
+                        Sorting is done based on the distance between the entity pairs. It may restrict entity pairs with
+                        large distance to be added if it is enabled.
+        collect_statistics: This parameter decides whether advance statistics to be collected or not. Few terms to know
+                            in order to understand the statistics properly:
+                            1. available relations: relations which are part of the document originally.
+                            2. candidate relations: possible entity pairs in the document. This includes available
+                                                    relations as well. Note: an entity cannot form a pair with itself.
+                            3. added relations: entity pairs which are not in available relations but in candidate
+                                                relations. This means available relations and added relations are
+                                                mutually exclusive.
+                        If this parameter is enabled then following statistics are collected:
+                        1. num_total_relation_candidates: Number of possible entity pairs in the document.
+                        2. num_available_relations: Number of available relations in the document.
+                        3. available_rels_within_allowed_distance: Number of available relations where distance b/w
+                                                                entity pair less than max_distance
+                        4. num_added_relation_not_taken: Number of added relations which are not taken due to exceeding
+                                                        max_distance or upper bound on allowed new relations.
+                        5. num_rels_within_allowed_distance: Number of candidate entity pairs whose distance is less
+                                                            than max_distance.
+                        6. num_candidates_not_taken: Candidate relations not taken due to exceeding max_distance or
+                                                    upper bound on allowed new relations. It is a dictionary which
+                                                    relation label as key and number of such relations not taken as value
+                        7. distances_taken: Dictionary containing relation label as key and list of distances between
+                                            the entity pairs of corresponding relations.
     """
 
     def __init__(
@@ -43,8 +69,8 @@ class CandidateRelationAdder(WithStatistics):
         max_distance: int | None = None,
         distance_type: str = "inner",
         added_relations_upper_bound_factor: int | None = None,
-        collect_statistics: bool = False,
         sort_by_distance: bool = True,
+        collect_statistics: bool = False,
     ):
         self.label = label
         self.use_partition = use_partition
