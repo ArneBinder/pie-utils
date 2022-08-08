@@ -25,17 +25,25 @@ class CandidateRelationAdder(WithStatistics):
     params:
         label: label for the new relations to be added
         use_partition: A boolean parameter to enable partition wise relation creation. If this parameter is enabled then
-                    it uses the partition of the document which is expected to by a list of non-overlapping spans. In this case, entity pairs that are not completely in the same partition entry are discarded.
-        max_distance: An optional parameter which restricts the maximum distance between entities of the new relations. If the distance between entities of the candidate pair is more than the value of this parameter then the candidate
-                    pair is discarded.
-        distance_type: The type of distance to be calculated between two entities when using max_distance. It can be inner (inner), outer or center.
-        added_rels_upper_bound_factor: [DEPRECATED] It is an optional float parameter to restrict the number of added relations by an upper bound. The upper bound n is calculated as,
+                    it uses the partition of the document which is expected to be a list of non-overlapping spans. In
+                    this case, entity pairs that are not completely in the same partition entry are discarded.
+        max_distance: An optional parameter which restricts the maximum distance between entities of the new relations.
+                    If the distance between entities of the candidate pair is more than the value of this parameter then
+                    the candidate pair is discarded.
+        distance_type: The type of distance to be calculated between two entities when using max_distance. It can be
+                        inner (inner), outer or center.
+        added_rels_upper_bound_factor: [DEPRECATED] It is an optional float parameter to restrict the number of added
+                                        relations by an upper bound. The upper bound n is calculated as,
                                                 n = added_rels_upper_bound_factor * num_available_relations
                                     see collect_statistics for the definition of num_available_relations.
-                                    Note: This is deprecated and should not be used because because during testing, the num_available_relations should not be available. Use max_distance instead which does not depend on that.
-                                    for num_available_relations.
-        sort_by_distance: This parameter decides if candidate entity pairs are ordered in sorted manner or not. This is only relevant when using added_rels_upper_bound_factor to restrict the number of added relations because only the first n candidate pairs after sorting are taken. Therefore, it allows to discard the highest distance pairs. 
-                        Sorting is done based on the distance between the entity pairs. 
+                                    Note: This is deprecated and should not be used because during testing, the
+                                    num_available_relations should not be available. Use max_distance instead which does
+                                     not depend on that.
+        sort_by_distance: This parameter decides if candidate entity pairs are ordered in sorted manner or not. This is
+                        only relevant when using added_rels_upper_bound_factor to restrict the number of added relations
+                         because only the first n candidate pairs after sorting are taken. Therefore, it allows to
+                         discard the highest distance pairs. Sorting is done based on the distance between the entity
+                         pairs.
         collect_statistics: This parameter defines whether advanced statistics are collected or not. Few terms to know
                             in order to understand the statistics properly:
                             1. available relations: relations which are part of the document originally.
