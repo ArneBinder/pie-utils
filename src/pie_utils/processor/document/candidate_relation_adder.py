@@ -26,8 +26,7 @@ class CandidateRelationAdder(WithStatistics):
         label: label for the new relations to be added
         use_partition: A boolean parameter to enable partition wise relation creation. If this parameter is enabled then
                     it uses the partition of the document which is expected to by a list of non-overlapping spans. In this case, entity pairs that are not completely in the same partition entry are discarded.
-        max_distance: An optional parameter which restricts the maximum distance between candidate entity pair to form a
-                    new relation. If distance between entity pair is more than the value of this parameter then candidate
+        max_distance: An optional parameter which restricts the maximum distance between entities of the new relations. If the distance between entities of the candidate pair is more than the value of this parameter then the candidate
                     pair is discarded.
         distance_type: The type of distance to be calculated between two entities when using max_distance. It can be inner (inner), outer or center.
         added_rels_upper_bound_factor: It is an optional parameter used to calculate the upper bound for the number of
