@@ -6,29 +6,29 @@ from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 from pie_utils.processor.document import DocumentWithEntitiesRelationsAndPartition
 from pie_utils.processor.document.candidate_relation_adder import CandidateRelationAdder
 
-TEXT_01 = "Jane lives in Berlin. this is no sentence about Karl\n"
-TEXT_02 = "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
-TEXT_03 = "Karl enjoys sunny days in Berlin."
+TEXT1 = "Jane lives in Berlin. this is no sentence about Karl\n"
+TEXT2 = "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
+TEXT3 = "Karl enjoys sunny days in Berlin."
 
-ENTITY_TEXT_01_JANE = LabeledSpan(start=0, end=4, label="person")
-ENTITY_TEXT_01_BERLIN = LabeledSpan(start=14, end=20, label="city")
-ENTITY_TEXT_01_KARL = LabeledSpan(start=48, end=52, label="person")
-TEXT_01_SENTENCE1 = LabeledSpan(start=0, end=21, label="sentence")
+ENTITY_JANE_TEXT1 = LabeledSpan(start=0, end=4, label="person")
+ENTITY_BERLIN_TEXT1 = LabeledSpan(start=14, end=20, label="city")
+ENTITY_KARL_TEXT1 = LabeledSpan(start=48, end=52, label="person")
+SENTENCE1_TEXT1 = LabeledSpan(start=0, end=21, label="sentence")
 REL_JANE_LIVES_IN_BERLIN = BinaryRelation(
-    head=ENTITY_TEXT_01_JANE, tail=ENTITY_TEXT_01_BERLIN, label="lives_in"
+    head=ENTITY_JANE_TEXT1, tail=ENTITY_BERLIN_TEXT1, label="lives_in"
 )
 
-ENTITY_TEXT_02_SEATTLE = LabeledSpan(start=0, end=7, label="city")
-ENTITY_TEXT_02_JENNY = LabeledSpan(start=25, end=37, label="person")
-TEXT_02_SENTENCE1 = LabeledSpan(start=0, end=24, label="sentence")
-TEXT_02_SENTENCE2 = LabeledSpan(start=25, end=58, label="sentence")
+ENTITY_SEATTLE_TEXT2 = LabeledSpan(start=0, end=7, label="city")
+ENTITY_JENNY_TEXT2 = LabeledSpan(start=25, end=37, label="person")
+SENTENCE1_TEXT2 = LabeledSpan(start=0, end=24, label="sentence")
+SENTENCE2_TEXT2 = LabeledSpan(start=25, end=58, label="sentence")
 REL_JENNY_MAYOR_OF_SEATTLE = BinaryRelation(
-    head=ENTITY_TEXT_02_JENNY, tail=ENTITY_TEXT_02_SEATTLE, label="mayor_of"
+    head=ENTITY_JENNY_TEXT2, tail=ENTITY_SEATTLE_TEXT2, label="mayor_of"
 )
 
-ENTITY_TEXT_03_KARL = LabeledSpan(start=0, end=4, label="person")
-ENTITY_TEXT_03_BERLIN = LabeledSpan(start=26, end=32, label="city")
-TEXT_03_SENTENCE1 = LabeledSpan(start=0, end=33, label="sentence")
+ENTITY_KARL_TEXT3 = LabeledSpan(start=0, end=4, label="person")
+ENTITY_BERLIN_TEXT3 = LabeledSpan(start=26, end=32, label="city")
+SENTENCE1_TEXT3 = LabeledSpan(start=0, end=33, label="sentence")
 
 
 def test_candidate_relation_adder():
@@ -36,10 +36,10 @@ def test_candidate_relation_adder():
         label="no_relation",
         collect_statistics=True,
     )
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
-    document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT1)
+    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partition.append(TEXT_01_SENTENCE1)
+    document.partition.append(SENTENCE1_TEXT1)
 
     original_document = copy.deepcopy(document)
     document = candidate_relation_adder(document)
@@ -56,24 +56,24 @@ def test_candidate_relation_adder():
     assert len(original_relations) == 1
     assert str(relations[0]) == str(original_relations[0])
     relation = relations[1]
-    assert str(relation.head) == str(ENTITY_TEXT_01_BERLIN)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_JANE)
+    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
+    assert str(relation.tail) == str(ENTITY_JANE_TEXT1)
     assert relation.label == "no_relation"
     relation = relations[2]
-    assert str(relation.head) == str(ENTITY_TEXT_01_BERLIN)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_KARL)
+    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
+    assert str(relation.tail) == str(ENTITY_KARL_TEXT1)
     assert relation.label == "no_relation"
     relation = relations[3]
-    assert str(relation.head) == str(ENTITY_TEXT_01_KARL)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_BERLIN)
+    assert str(relation.head) == str(ENTITY_KARL_TEXT1)
+    assert str(relation.tail) == str(ENTITY_BERLIN_TEXT1)
     assert relation.label == "no_relation"
     relation = relations[4]
-    assert str(relation.head) == str(ENTITY_TEXT_01_JANE)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_KARL)
+    assert str(relation.head) == str(ENTITY_JANE_TEXT1)
+    assert str(relation.tail) == str(ENTITY_KARL_TEXT1)
     assert relation.label == "no_relation"
     relation = relations[5]
-    assert str(relation.head) == str(ENTITY_TEXT_01_KARL)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_JANE)
+    assert str(relation.head) == str(ENTITY_KARL_TEXT1)
+    assert str(relation.tail) == str(ENTITY_JANE_TEXT1)
     assert relation.label == "no_relation"
 
 
@@ -84,10 +84,10 @@ def test_candidate_relation_adder_with_statistics():
         max_distance=8,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
-    document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT1)
+    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partition.append(TEXT_01_SENTENCE1)
+    document.partition.append(SENTENCE1_TEXT1)
 
     document = candidate_relation_adder_with_statistics(document)
     assert len(document) == 3
@@ -119,10 +119,10 @@ def test_candidate_relation_adder_without_sort_by_distance():
         sort_by_distance=False,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
-    document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT1)
+    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partition.append(TEXT_01_SENTENCE1)
+    document.partition.append(SENTENCE1_TEXT1)
 
     original_document = copy.deepcopy(document)
     document = candidate_relation_adder_without_sort_by_distance(document)
@@ -156,10 +156,10 @@ def test_candidate_relation_adder_with_no_relation_upper_bound():
         added_relations_upper_bound_factor=3,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_01)
-    document.entities.extend([ENTITY_TEXT_01_JANE, ENTITY_TEXT_01_BERLIN, ENTITY_TEXT_01_KARL])
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT1)
+    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partition.append(TEXT_01_SENTENCE1)
+    document.partition.append(SENTENCE1_TEXT1)
 
     original_document = copy.deepcopy(document)
     document = candidate_relation_adder_with_no_relation_upper_bound(document)
@@ -177,12 +177,12 @@ def test_candidate_relation_adder_with_no_relation_upper_bound():
     assert len(original_relations) == 1
     assert str(relations[0]) == str(original_relations[0])
     relation = relations[1]
-    assert str(relation.head) == str(ENTITY_TEXT_01_BERLIN)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_JANE)
+    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
+    assert str(relation.tail) == str(ENTITY_JANE_TEXT1)
     assert relation.label == "no_relation"
     relation = relations[2]
-    assert str(relation.head) == str(ENTITY_TEXT_01_BERLIN)
-    assert str(relation.tail) == str(ENTITY_TEXT_01_KARL)
+    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
+    assert str(relation.tail) == str(ENTITY_KARL_TEXT1)
     assert relation.label == "no_relation"
 
 
@@ -192,10 +192,10 @@ def test_candidate_relation_adder_with_partitions():
         use_partition=True,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_02)
-    document.entities.extend([ENTITY_TEXT_02_SEATTLE, ENTITY_TEXT_02_JENNY])
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT2)
+    document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
-    document.partition.extend([TEXT_02_SENTENCE1, TEXT_02_SENTENCE2])
+    document.partition.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
 
     original_document = copy.deepcopy(document)
     candidate_relation_adder_with_partition(document)
@@ -225,9 +225,9 @@ def test_candidate_relation_adder_with_partitions_and_max_distance():
         max_distance=8,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT_03)
-    document.entities.extend([ENTITY_TEXT_03_KARL, ENTITY_TEXT_03_BERLIN])
-    document.partition.append(TEXT_03_SENTENCE1)
+    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT3)
+    document.entities.extend([ENTITY_KARL_TEXT3, ENTITY_BERLIN_TEXT3])
+    document.partition.append(SENTENCE1_TEXT3)
 
     original_document = copy.deepcopy(document)
     candidate_relation_adder_with_partition_and_max_distance(document)
