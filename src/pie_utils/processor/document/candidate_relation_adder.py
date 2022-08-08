@@ -49,8 +49,8 @@ class CandidateRelationAdder(WithStatistics):
                         If this parameter is enabled then following statistics are collected:
                         1. num_total_relation_candidates: Number of possible entity pairs in the document.
                         2. num_available_relations: Number of available relations in the document.
-                        3. available_rels_within_allowed_distance: Number of available relations where distance b/w
-                                                                entity pair less than max_distance
+                        3. available_rels_within_allowed_distance: Number of available relations where the distance between
+                                                                entity pairs does not exceed max_distance
                         4. num_added_relation_not_taken: Number of added relations which are not taken due to exceeding
                                                         max_distance or upper bound on allowed new relations.
                         5. num_rels_within_allowed_distance: Number of candidate entity pairs whose distance is less
