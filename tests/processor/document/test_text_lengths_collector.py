@@ -12,6 +12,7 @@ def test_text_lengths_collector():
     processed_document = text_lengths_collector(document)
     assert document == processed_document
     assert text_lengths_collector.text_lengths == [14]
+    assert text_lengths_collector.num_docs == 1
 
 
 def test_text_lengths_collector_with_partition():
@@ -32,5 +33,7 @@ def test_text_lengths_collector_with_partition():
     processed_document = text_lengths_collector(document)
     assert document == processed_document
     assert text_lengths_collector.text_lengths == [7, 9]
+    assert text_lengths_collector.num_docs == 1
+    assert text_lengths_collector.num_parts == 2
 
     text_lengths_collector.show_statistics()

@@ -29,6 +29,8 @@ class TextLengthsCollector(WithStatistics):
 
     def reset_statistics(self):
         self.text_lengths = []
+        self.num_docs = 0
+        self.num_parts = 0
 
     def show_statistics(self, description: str | None = None):
         description = description or "Statistics for text lengths"
@@ -51,7 +53,10 @@ class TextLengthsCollector(WithStatistics):
             "max": max(self.text_lengths),
             "mean": statistics.mean(self.text_lengths),
             "stddev": statistics.pstdev(self.text_lengths),
+            "num_docs": self.num_docs,
         }
+        if self.use_partition:
+            stats["num_parts"] = self.num_parts
 
         logger.info(f"{caption}):\n{json.dumps(stats, indent=2)}")
 
@@ -64,4 +69,6 @@ class TextLengthsCollector(WithStatistics):
         )
         new_lengths = [len(encoding) for encoding in tokenized.encodings]
         self.text_lengths.extend(new_lengths)
+        self.num_parts += len(partition)
+        self.num_docs += 1
         return document
