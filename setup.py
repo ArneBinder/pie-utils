@@ -9,6 +9,7 @@ REQUIRED_PKGS = [
 TESTS_REQUIRE = [
     "pytest",
     "pytest-cov",
+    "plotext",
 ]
 
 QUALITY_REQUIRE = [
