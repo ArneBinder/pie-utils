@@ -15,6 +15,22 @@ logger = logging.getLogger(__name__)
 
 
 class TextLengthsCollector(WithStatistics):
+    """This document processors collects the text lengths in means of token numbers and allows to
+    show them as json dict and, if plotext is installed, as histogram. Its nature is purely
+    statistical, it does not modify the documents.
+
+    Presented values:
+     * min, max, mean, and stddev of the collected text lengths,
+     * num_docs (number of processed documents), and
+     * if use_partition is enabled, num_parts (number of precessed parts)
+
+    :param tokenizer_name_or_path the identifier of the Huggingface tokenizer that will be used
+    :param use_partition a boolean flag to enable considering a partition, i.e. tokenize and
+        collect the lengths for the partition entries (e.g. sentences or sections) individually.
+    :param tokenizer_kwargs a dictionary containing further keyword arguments passed when calling
+        the tokenizer
+    """
+
     def __init__(
         self,
         tokenizer_name_or_path: str,
@@ -44,7 +60,7 @@ class TextLengthsCollector(WithStatistics):
             plt.show()
 
         # exclude from test coverage since this would require to uninstall plotext and
-        # just a simple logging is performed
+        # just a simple logging is performed here
         except ModuleNotFoundError:  # pragma: no cover
             logger.info("install plotext to display the data as histogram at the console")
 
