@@ -50,7 +50,7 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
-        args: ["--ignore", "E501,F401,F841,W504,E203", "--extend-select", "W503",  "--exclude", "logs/*,data/*"]
+        args: ["--ignore", "E501,F401,F841,W503,E203", "--extend-select", "W504",  "--exclude", "logs/*,data/*"]
 
   # python security linter
   - repo: https://github.com/PyCQA/bandit
