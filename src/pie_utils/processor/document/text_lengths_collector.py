@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class TextLengthsCollector(WithStatistics):
-    """This document processors collects the text lengths in means of token numbers and allows to
+    """This document processor collects the text lengths in means of token numbers and allows to
     show them as json dict and, if plotext is installed, as histogram. Its nature is purely
     statistical, it does not modify the documents.
 
