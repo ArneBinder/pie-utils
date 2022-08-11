@@ -29,6 +29,8 @@ class TextLengthsCollector(WithStatistics):
         collect the lengths for the partition entries (e.g. sentences or sections) individually.
     :param tokenizer_kwargs a dictionary containing further keyword arguments passed when calling
         the tokenizer
+    :param plotext_kwargs a dictionary containing further keyword arguments passed when calling
+        plotext.hist().
     """
 
     def __init__(
@@ -36,11 +38,13 @@ class TextLengthsCollector(WithStatistics):
         tokenizer_name_or_path: str,
         use_partition: bool | None = False,
         tokenizer_kwargs: dict | None = None,
+        plotext_kwargs: dict | None = None,
     ):
         self.use_partition = use_partition
         self.tokenizer_name_or_path = tokenizer_name_or_path
         self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name_or_path)
         self.tokenizer_kwargs = tokenizer_kwargs or {}
+        self.plotext_kwargs = plotext_kwargs or {}
         self.reset_statistics()
 
     def reset_statistics(self):
@@ -55,7 +59,7 @@ class TextLengthsCollector(WithStatistics):
             import plotext as plt
 
             plt.clf()
-            plt.hist(data=self.text_lengths)
+            plt.hist(data=self.text_lengths, **self.plotext_kwargs)
             plt.title(caption)
             plt.show()
 
