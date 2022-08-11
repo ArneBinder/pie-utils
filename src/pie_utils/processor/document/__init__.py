@@ -6,6 +6,11 @@ from pytorch_ie.documents import TextDocument
 
 
 @dataclass
+class DocumentWithPartition(TextDocument):
+    partition: AnnotationList[Span] = annotation_field(target="text")
+
+
+@dataclass
 class DocumentWithEntitiesRelationsAndPartition(TextDocument):
     entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
     relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
