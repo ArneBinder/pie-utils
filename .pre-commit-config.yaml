@@ -80,7 +80,8 @@ repos:
       - id: codespell
         args:
           - --skip=logs/**,data/**
-          # - --ignore-words-list=abc,def
+          # required for plotext.hist()
+          - --ignore-words-list=hist
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
