@@ -9,7 +9,10 @@ changelog:
     - title: ":pencil: Document Processors"
       labels:
           - "document processor"
-    - title: ":rocket: Features"
+    - title: ":zap: Metrics"
+      labels:
+          - "metric"
+    - title: ":rocket: Other Features"
       labels:
           - "enhancement"
     - title: ":fire: Removals and Deprecations"
