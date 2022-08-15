@@ -14,11 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 class ReversedRelationAdder(WithStatistics):
-    """TODO.
+    """ReversedRelationAdder adds binary relations to a document by reversing already existing
+    relations in the document. Reversing of a relation is done by swapping head and tail span in a
+    relation.
 
-    :param symmetric_relation_labels TODO
-    :param label_suffix TODO
-    :param allow_already_reversed_relations TODO
+    :param label_suffix : A string to be appended as suffix with relation label
+    :param symmetric_relation_labels : List of symmetric relation labels which when reversed will use original relation
+                                        label instead of suffixed with label_suffix
+    :param allow_already_reversed_relations : A boolean value that allows to have existing reversed relation in the
+                                            document. This means that document originally contains a pair of relations
+                                            which are reverse of each other. If this parameter is disabled and such
+                                            relation is found then an exception is raised.
     """
 
     def __init__(
