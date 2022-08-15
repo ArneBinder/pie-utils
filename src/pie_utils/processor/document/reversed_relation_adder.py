@@ -21,31 +21,35 @@ class ReversedRelationAdder(WithStatistics):
     :param allow_already_reversed_relations TODO
     """
 
-    def __int__(
+    def __init__(
         self,
-        symmetric_relation_labels: list[str] | None = None,
         label_suffix: str = "_reversed",
+        symmetric_relation_labels: list[str] | None = None,
         allow_already_reversed_relations: bool = False,
     ):
         self.symmetric_relation_labels = symmetric_relation_labels or []
         self.label_suffix = label_suffix
         self.allow_already_reversed_relations = allow_already_reversed_relations
+        self.reset_statistics()
 
     def reset_statistics(self):
-        self.added_relations = defaultdict(int)
+        self._statistics = {
+            "added_relations": defaultdict(int),
+            "already_reversed_relations": defaultdict(int),
+            "num_available_relations": 0,
+            "num_added_relations": 0,
+        }
 
     def show_statistics(self, description: str | None = None):
         description = description or "Statistics"
-        logger.info(
-            f"{description}: added reversed relations\n{json.dumps(dict(self.added_relations))}"
-        )
+        logger.info(f"{description}:\n{json.dumps(dict(self._statistics))}")
 
     def __call__(
         self, document: DocumentWithEntitiesAndRelations
     ) -> DocumentWithEntitiesAndRelations:
         # get all relations before adding any reversed
         rels = list(document.relations)
-
+        self._statistics["num_available_relations"] += len(rels)
         available_relations = {(rel.head, rel.tail): rel for rel in rels}
         for rel in rels:
             new_label = (
@@ -55,11 +59,12 @@ class ReversedRelationAdder(WithStatistics):
             )
             new_relation = BinaryRelation(label=new_label, head=rel.tail, tail=rel.head)
             if (new_relation.head, new_relation.tail) in available_relations:
-                # If an entity pair of reveCandidatersed relation is present in the available relations then we check if we want
+                # If an entity pair of reversed relation is present in the available relations then we check if we want
                 # to allow already existing reversed relations or not. If we allow then we do not add the reversed
                 # relation to the document but move on to the next relation otherwise we generate a LookupError
                 # exception.
                 if self.allow_already_reversed_relations:
+                    self._statistics["already_reversed_relations"][new_relation.label] += 1
                     continue
                 else:
                     raise LookupError(
@@ -68,6 +73,7 @@ class ReversedRelationAdder(WithStatistics):
                     )
             else:
                 document.relations.append(new_relation)
-                self.added_relations[new_relation.label] += 1
+                self._statistics["added_relations"][new_relation.label] += 1
+                self._statistics["num_added_relations"] += 1
 
         return document
