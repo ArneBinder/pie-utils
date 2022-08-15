@@ -4,7 +4,7 @@ changelog:
       - ignore-for-release
   categories:
     - title: ":boom: Breaking Changes"
-      labels: 
+      labels:
           - "breaking"
     - title: ":pencil: Document Processors"
       labels:
