@@ -6,6 +6,9 @@ changelog:
     - title: ":boom: Breaking Changes"
       labels: 
           - "breaking"
+    - title: ":pencil: Document Processors"
+      labels:
+          - "document processor"
     - title: ":rocket: Features"
       labels:
           - "enhancement"
