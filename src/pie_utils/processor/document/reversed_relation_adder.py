@@ -18,13 +18,13 @@ class ReversedRelationAdder(WithStatistics):
     relations in the document. Reversing of a relation is done by swapping head and tail span in a
     relation.
 
-    :param label_suffix : A string to be appended as suffix with relation label
+    :param label_suffix : A string to be appended as suffix with relation label (the default value is _reversed)
     :param symmetric_relation_labels : List of symmetric relation labels which when reversed will use original relation
-                                        label instead of suffixed with label_suffix
+                                        label instead of suffixed with label_suffix (the default value is None)
     :param allow_already_reversed_relations : A boolean value that allows to have existing reversed relation in the
                                             document. This means that document originally contains a pair of relations
                                             which are reverse of each other. If this parameter is disabled and such
-                                            relation is found then an exception is raised.
+                                            relation is found then an exception is raised. (the default value is False)
     """
 
     def __init__(
