@@ -61,6 +61,7 @@ def test_test_split_document_to_partitions_with_statistics():
     num_partitions = split_document_to_partitions_with_statistics._statistics["num_partitions"]
     assert num_partitions == [3]
     document_lengths = split_document_to_partitions_with_statistics._statistics["document_lengths"]
+    assert document_lengths == [len(TEXT1)]
     assert sum(document_lengths) == sum(partition_lengths)
 
     document = DocumentWithPartition(text=TEXT2)
@@ -74,6 +75,7 @@ def test_test_split_document_to_partitions_with_statistics():
     num_partitions = split_document_to_partitions_with_statistics._statistics["num_partitions"]
     assert num_partitions == [3, 2]
     document_lengths = split_document_to_partitions_with_statistics._statistics["document_lengths"]
+    assert document_lengths == [len(TEXT1), len(TEXT2)]
     assert sum(document_lengths) == sum(partition_lengths)
 
     with pytest.raises(TypeError) as e:
