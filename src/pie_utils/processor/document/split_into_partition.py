@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any, Callable, Iterable, Iterator, Match
 
-from pytorch_ie.annotations import Span
+from pytorch_ie.annotations import LabeledSpan, Span
 
 from pie_utils.span.slice import have_overlap
 from pie_utils.statistics import WithStatistics
@@ -32,7 +32,7 @@ def get_partitions_with_matcher(
     the first match is not added as a partition. Note that the initial partition will get None as
     label since no matched element is available.
     """
-    previous_start = None
+    previous_start = previous_label = None
     if not skip_initial_partition:
         previous_start = 0
     for match in matcher(document.text):
@@ -45,14 +45,14 @@ def get_partitions_with_matcher(
         if label_whitelist is None or label in label_whitelist:
             if previous_start is not None:
                 end = match.start()
-                span = Span(start=previous_start, end=end)
+                span = LabeledSpan(start=previous_start, end=end, label=previous_label)
                 yield span
 
             previous_start = match.start()
 
     if previous_start is not None:
         end = len(document.text)
-        span = Span(start=previous_start, end=end)
+        span = LabeledSpan(start=previous_start, end=end, label=previous_label)
         yield span
 
 
