@@ -141,3 +141,45 @@ def test_get_partitions_with_matcher():
         for p in partitions:
             assert not have_overlap((p.start, p.end), (partition.start, partition.end))
         partitions.append(partition)
+
+
+def test_split_document_to_partitions_with_no_parts_added():
+    split_document_to_partitions = SplitDocumentToPartitions(
+        pattern="(<start>|<middle>|<end>)",
+        label_group_id=0,
+        label_whitelist=[],
+        skip_initial_partition=True,
+    )
+    document = DocumentWithPartition(text=TEXT1)
+    new_document = split_document_to_partitions(document)
+
+    partitions = new_document.partition
+    assert len(partitions) == 0
+
+    split_document_to_partitions = SplitDocumentToPartitions(
+        pattern="(<start>|<middle>|<end>)",
+        label_group_id=0,
+        label_whitelist=[],
+    )
+    document = DocumentWithPartition(text=TEXT1)
+    new_document = split_document_to_partitions(document)
+
+    partitions = new_document.partition
+    assert len(partitions) == 1
+    partition = partitions[0]
+    assert partition.label == "initial part"
+    assert new_document.text[partition.start : partition.end] == TEXT1
+
+
+def test_split_document_to_partitions_with_no_match_found():
+    split_document_to_partitions = SplitDocumentToPartitions(
+        pattern="(<middle>)",
+        label_group_id=0,
+        label_whitelist=[],
+        skip_initial_partition=True,
+    )
+    document = DocumentWithPartition(text=TEXT2)
+    new_document = split_document_to_partitions(document)
+
+    partitions = new_document.partition
+    assert len(partitions) == 0
