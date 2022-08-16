@@ -20,6 +20,7 @@ def get_partitions_with_matcher(
     label_group_id: int | None = None,  # = 1,
     label_whitelist: list[str] | None = None,
     skip_initial_partition: bool = False,  # = True
+    initial_partition_label: str = "initial part",
 ) -> Iterator[LabeledSpan]:
     """Spans are created starting with the beginning of matching entries end ending with the start
     of the next matching one or the end of the document.
@@ -34,7 +35,7 @@ def get_partitions_with_matcher(
     previous_start = previous_label = None
     if not skip_initial_partition:
         previous_start = 0
-        previous_label = "<initial_part>"  # This is added here because if we want to keep initial partition then without
+        previous_label = initial_partition_label  # This is added here because if we want to keep initial partition then without
         # setting a label here, None is added as label which result in exception. We can have a parameter for
         # initial_label.
     for match in matcher(document.text):
@@ -67,12 +68,14 @@ class SplitDocumentToPartitions(WithStatistics):
         label_whitelist: list[str] | None = None,
         skip_initial_partition: bool = False,  # = True
         collect_statistics: bool = False,
+        initial_partition_label: str = "initial part",
     ):
         self.label_group_id = label_group_id
         self.label_whitelist = label_whitelist
         self.skip_initial_partition = skip_initial_partition
         self.matcher = re.compile(pattern).finditer
         self.collect_statistics = collect_statistics
+        self.initial_partition_label = initial_partition_label
         self.reset_statistics()
 
     def reset_statistics(self):
@@ -106,6 +109,7 @@ class SplitDocumentToPartitions(WithStatistics):
             skip_initial_partition=self.skip_initial_partition,
             label_whitelist=self.label_whitelist,
             label_group_id=self.label_group_id,
+            initial_partition_label=self.initial_partition_label,
         ):
 
             document.partition.append(partition)

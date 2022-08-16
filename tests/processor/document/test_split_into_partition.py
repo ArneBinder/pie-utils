@@ -97,6 +97,7 @@ def test_split_document_to_partitions_with_initial_partition():
         pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
         collect_statistics=True,
+        initial_partition_label="<initial_part>",
     )
 
     document = DocumentWithPartition(text=TEXT2)
