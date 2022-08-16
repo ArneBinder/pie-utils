@@ -10,17 +10,13 @@ from pie_utils.processor.document.split_into_partition import (
 )
 from pie_utils.span.slice import have_overlap
 
-TEXT1 = """This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl.
-<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor.
-<end>Karl enjoys sunny days in Berlin.
-"""
-
-TEXT2 = """This is initial text.<start>Lily is mother of Harry.
-<end>Beth greets Emma.
-"""
-
 
 def test_split_document_to_partitions():
+    TEXT1 = (
+        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
+        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        "<end>Karl enjoys sunny days in Berlin."
+    )
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
@@ -35,20 +31,27 @@ def test_split_document_to_partitions():
     partition = partitions[0]
     assert (
         new_document.text[partition.start : partition.end]
-        == "<start>Jane lives in Berlin. this is no sentence about Karl.\n<middle>Seattle is a rainy city. "
-        "Jenny Durkan is the city's mayor.\n"
+        == "<start>Jane lives in Berlin. this is no sentence about Karl.<middle>Seattle is a rainy city. "
+        "Jenny Durkan is the city's mayor."
     )
     assert partition.label == "<start>"
 
     partition = partitions[1]
     assert (
         new_document.text[partition.start : partition.end]
-        == "<end>Karl enjoys sunny days in Berlin.\n"
+        == "<end>Karl enjoys sunny days in Berlin."
     )
     assert partition.label == "<end>"
 
 
 def test_test_split_document_to_partitions_with_statistics():
+    TEXT1 = (
+        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
+        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        "<end>Karl enjoys sunny days in Berlin."
+    )
+    TEXT2 = "This is initial text.<start>Lily is mother of Harry.<end>Beth greets Emma."
+
     split_document_to_partitions_with_statistics = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
@@ -56,6 +59,7 @@ def test_test_split_document_to_partitions_with_statistics():
         skip_initial_partition=True,
         collect_statistics=True,
     )
+
     document = DocumentWithPartition(text=TEXT1)
     new_document = split_document_to_partitions_with_statistics(document)
     partitions = new_document.partition
@@ -63,7 +67,7 @@ def test_test_split_document_to_partitions_with_statistics():
     partition_lengths = split_document_to_partitions_with_statistics._statistics[
         "partition_lengths"
     ]
-    assert partition_lengths == [61, 67, 39]
+    assert partition_lengths == [60, 66, 38]
     num_partitions = split_document_to_partitions_with_statistics._statistics["num_partitions"]
     assert num_partitions == [3]
     document_lengths = split_document_to_partitions_with_statistics._statistics["document_lengths"]
@@ -77,7 +81,7 @@ def test_test_split_document_to_partitions_with_statistics():
     partition_lengths = split_document_to_partitions_with_statistics._statistics[
         "partition_lengths"
     ]
-    assert partition_lengths == [61, 67, 39, 32, 23]
+    assert partition_lengths == [60, 66, 38, 31, 22]
     num_partitions = split_document_to_partitions_with_statistics._statistics["num_partitions"]
     assert num_partitions == [3, 2]
     document_lengths = split_document_to_partitions_with_statistics._statistics["document_lengths"]
@@ -92,14 +96,13 @@ def test_test_split_document_to_partitions_with_statistics():
 
 
 def test_split_document_to_partitions_with_initial_partition():
-
+    TEXT2 = "This is initial text.<start>Lily is mother of Harry.<end>Beth greets Emma."
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
         collect_statistics=True,
         initial_partition_label="<initial_part>",
     )
-
     document = DocumentWithPartition(text=TEXT2)
     new_document = split_document_to_partitions(document)
 
@@ -115,6 +118,11 @@ def test_split_document_to_partitions_with_initial_partition():
 
 
 def test_split_document_to_partitions_without_label_group_id():
+    TEXT1 = (
+        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
+        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        "<end>Karl enjoys sunny days in Berlin."
+    )
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
         label_whitelist=["<start>", "<middle>", "<end>"],
@@ -128,6 +136,11 @@ def test_split_document_to_partitions_without_label_group_id():
 
 
 def test_get_partitions_with_matcher():
+    TEXT1 = (
+        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
+        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        "<end>Karl enjoys sunny days in Berlin."
+    )
     document = DocumentWithPartition(text=TEXT1)
     matcher = re.compile("(<start>|<middle>|<end>)").finditer
     partitions = []
@@ -144,12 +157,18 @@ def test_get_partitions_with_matcher():
 
 
 def test_split_document_to_partitions_with_no_parts_added():
+    TEXT1 = (
+        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
+        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        "<end>Karl enjoys sunny days in Berlin."
+    )
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
         label_whitelist=[],
         skip_initial_partition=True,
     )
+
     document = DocumentWithPartition(text=TEXT1)
     new_document = split_document_to_partitions(document)
 
@@ -172,6 +191,7 @@ def test_split_document_to_partitions_with_no_parts_added():
 
 
 def test_split_document_to_partitions_with_no_match_found():
+    TEXT2 = "This is initial text.<start>Lily is mother of Harry.<end>Beth greets Emma."
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<middle>)",
         label_group_id=0,
