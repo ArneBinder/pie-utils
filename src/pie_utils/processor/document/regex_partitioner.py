@@ -87,7 +87,15 @@ class RegexPartitioner(WithStatistics):
 
     def show_statistics(self, description: str | None = None):
         description = description or "Statistics"
-        logger.info(f"{description}: \n{json.dumps(self._statistics, indent=2)}")
+        statistics_show = {
+          key: {
+            "min": min(values),
+            "max": max(values),
+            "mean": statistics.mean(values),
+            "stddev": statistics.pstdev(values),
+            } for k, v in self._statistics.items()}
+
+        logger.info(f"{description}: \n{json.dumps(statistics_show, indent=2)}")
 
     def update_statistics(self, key: str, value: int | str | list):
         if self.collect_statistics:
