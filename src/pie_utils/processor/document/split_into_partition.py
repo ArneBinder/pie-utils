@@ -7,7 +7,6 @@ from typing import Any, Callable, Iterable, Iterator, Match
 
 from pytorch_ie.annotations import LabeledSpan, Span
 
-from pie_utils.span.slice import have_overlap
 from pie_utils.statistics import WithStatistics
 
 from ..document import DocumentWithPartition
@@ -21,7 +20,7 @@ def get_partitions_with_matcher(
     label_group_id: int | None = None,  # = 1,
     label_whitelist: list[str] | None = None,
     skip_initial_partition: bool = False,  # = True
-) -> Iterator[Span]:
+) -> Iterator[LabeledSpan]:
     """Spans are created starting with the beginning of matching entries end ending with the start
     of the next matching one or the end of the document.
 
