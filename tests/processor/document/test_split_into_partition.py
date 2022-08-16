@@ -24,27 +24,23 @@ def test_split_document_to_partitions():
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
-        label_whitelist=["<start>", "<middle>", "<end>"],
+        label_whitelist=["<start>", "<end>"],
         skip_initial_partition=True,
     )
     document = DocumentWithPartition(text=TEXT1)
     new_document = split_document_to_partitions(document)
 
     partitions = new_document.partition
-    assert len(partitions) == 3
+    assert len(partitions) == 2
     partition = partitions[0]
     assert (
         new_document.text[partition.start : partition.end]
-        == "<start>Jane lives in Berlin. this is no sentence about Karl.\n"
+        == "<start>Jane lives in Berlin. this is no sentence about Karl.\n<middle>Seattle is a rainy city. "
+        "Jenny Durkan is the city's mayor.\n"
     )
     assert partition.label == "<start>"
+
     partition = partitions[1]
-    assert (
-        new_document.text[partition.start : partition.end]
-        == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
-    )
-    assert partition.label == "<middle>"
-    partition = partitions[2]
     assert (
         new_document.text[partition.start : partition.end]
         == "<end>Karl enjoys sunny days in Berlin.\n"
@@ -99,7 +95,6 @@ def test_split_document_to_partitions_with_initial_partition():
 
     split_document_to_partitions = SplitDocumentToPartitions(
         pattern="(<start>|<middle>|<end>)",
-        label_whitelist=["<start>", "<middle>", "<end>"],
         label_group_id=0,
         collect_statistics=True,
     )
