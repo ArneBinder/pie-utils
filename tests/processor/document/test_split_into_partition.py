@@ -30,16 +30,19 @@ def test_split_document_to_partitions():
         new_document.text[partition.start : partition.end]
         == "<start>Jane lives in Berlin. this is no sentence about Karl.\n"
     )
+    assert partition.label == "<start>"
     partition = partitions[1]
     assert (
         new_document.text[partition.start : partition.end]
         == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
     )
+    assert partition.label == "<middle>"
     partition = partitions[2]
     assert (
         new_document.text[partition.start : partition.end]
         == "<end>Karl enjoys sunny days in Berlin.\n"
     )
+    assert partition.label == "<end>"
 
 
 def test_test_split_document_to_partitions_with_statistics():
