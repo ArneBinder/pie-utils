@@ -108,10 +108,6 @@ class SplitDocumentToPartitions(WithStatistics):
             label_whitelist=self.label_whitelist,
             label_group_id=self.label_group_id,
         ):
-            # just a sanity check
-            for s in partitions_for_doc:
-                if have_overlap((s.start, s.end), (partition.start, partition.end)):
-                    logger.error(f"overlap: {partition} with {s}")
 
             document.partition.append(partition)
             partitions_for_doc.append(partition)

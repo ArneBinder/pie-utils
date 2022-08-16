@@ -122,5 +122,17 @@ def test_split_document_to_partitions_without_label_group_id():
     assert len(partitions) == 0
 
 
-def test_split_document_to_partitions_with_overlap():
-    pass
+def test_get_partitions_with_matcher():
+    document = DocumentWithPartition(text=TEXT1)
+    matcher = re.compile("(<start>|<middle>|<end>)").finditer
+    partitions = []
+    for partition in get_partitions_with_matcher(
+        document=document,
+        matcher=matcher,
+        label_group_id=0,
+        label_whitelist=["<start>", "<middle>", "<end>"],
+    ):
+        assert isinstance(partition, LabeledSpan)
+        for p in partitions:
+            assert not have_overlap((p.start, p.end), (partition.start, partition.end))
+        partitions.append(partition)
