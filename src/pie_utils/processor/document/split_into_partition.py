@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any, Callable, Iterable, Iterator, Match
 
-from pytorch_ie.annotations import LabeledSpan, Span
+from pytorch_ie.annotations import LabeledSpan
 
 from pie_utils.statistics import WithStatistics
 
@@ -101,7 +101,6 @@ class SplitDocumentToPartitions(WithStatistics):
                 )
 
     def __call__(self, document: DocumentWithPartition):
-        partitions_for_doc: list[Span] = []
         partition_lengths = []
         for partition in get_partitions_with_matcher(
             document,
@@ -111,9 +110,7 @@ class SplitDocumentToPartitions(WithStatistics):
             label_group_id=self.label_group_id,
             initial_partition_label=self.initial_partition_label,
         ):
-
             document.partition.append(partition)
-            partitions_for_doc.append(partition)
             partition_lengths.append(partition.end - partition.start)
 
         if self.collect_statistics:
