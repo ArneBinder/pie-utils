@@ -35,6 +35,9 @@ def get_partitions_with_matcher(
     previous_start = previous_label = None
     if not skip_initial_partition:
         previous_start = 0
+        previous_label = "<initial_part>"  # This is added here because if we want to keep initial partition then without
+        # setting a label here, None is added as label which result in exception. We can have a parameter for
+        # initial_label.
     for match in matcher(document.text):
         if label_group_id is not None:
             start = match.start(label_group_id)
@@ -49,6 +52,7 @@ def get_partitions_with_matcher(
                 yield span
 
             previous_start = match.start()
+            previous_label = label
 
     if previous_start is not None:
         end = len(document.text)
