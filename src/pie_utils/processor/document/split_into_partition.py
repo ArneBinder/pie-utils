@@ -76,7 +76,7 @@ class SplitDocumentToPartitions(WithStatistics):
         self._statistics: dict[str, Any] = {
             "partition_lengths": [],
             "num_partitions": [],
-            "partition_texts": [],
+            "document_lengths": [],
         }
 
     def show_statistics(self, description: str | None = None):
@@ -97,7 +97,6 @@ class SplitDocumentToPartitions(WithStatistics):
     def __call__(self, document: DocumentWithPartition):
         partitions_for_doc: list[Span] = []
         partition_lengths = []
-        partition_texts = []
         for partition in get_partitions_with_matcher(
             document,
             matcher=self.matcher,
@@ -112,12 +111,11 @@ class SplitDocumentToPartitions(WithStatistics):
 
             document.partition.append(partition)
             partitions_for_doc.append(partition)
-            partition_texts.append(document.text[partition.start : partition.end])
             partition_lengths.append(partition.end - partition.start)
 
         if self.collect_statistics:
             self.update_statistics("num_partitions", len(document.partition))
             self.update_statistics("partition_lengths", partition_lengths)
-            self.update_statistics("partition_texts", partition_texts)
+            self.update_statistics("document_lengths", len(document.text))
 
         return document
