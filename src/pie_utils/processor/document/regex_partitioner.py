@@ -60,7 +60,7 @@ def get_partitions_with_matcher(
         yield span
 
 
-class SplitDocumentToPartitions(WithStatistics):
+class RegexPartitioner(WithStatistics):
     def __init__(
         self,
         pattern: str,
