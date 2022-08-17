@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import statistics
 from typing import Any, Callable, Iterable, Iterator, Match
 
 from pytorch_ie.annotations import LabeledSpan
@@ -88,12 +89,14 @@ class RegexPartitioner(WithStatistics):
     def show_statistics(self, description: str | None = None):
         description = description or "Statistics"
         statistics_show = {
-          key: {
-            "min": min(values),
-            "max": max(values),
-            "mean": statistics.mean(values),
-            "stddev": statistics.pstdev(values),
-            } for k, v in self._statistics.items()}
+            key: {
+                "min": min(values),
+                "max": max(values),
+                "mean": statistics.mean(values),
+                "stddev": statistics.pstdev(values),
+            }
+            for key, values in self._statistics.items()
+        }
 
         logger.info(f"{description}: \n{json.dumps(statistics_show, indent=2)}")
 
