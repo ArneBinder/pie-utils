@@ -12,12 +12,12 @@ class DocumentWithEntitiesAndRelations(TextDocument):
 
 
 @dataclass
-class DocumentWithPartition(TextDocument):
-    partition: AnnotationList[LabeledSpan] = annotation_field(target="text")
+class DocumentWithPartitions(TextDocument):
+    partitions: AnnotationList[LabeledSpan] = annotation_field(target="text")
 
 
 @dataclass
-class DocumentWithEntitiesRelationsAndPartition(TextDocument):
+class DocumentWithEntitiesRelationsAndPartitions(TextDocument):
     entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
     relations: AnnotationList[BinaryRelation] = annotation_field(target="entities")
-    partition: AnnotationList[LabeledSpan] = annotation_field(target="text")
+    partitions: AnnotationList[LabeledSpan] = annotation_field(target="text")

@@ -3,7 +3,7 @@ import re
 import pytest
 from pytorch_ie.annotations import LabeledSpan
 
-from pie_utils.processor.document import DocumentWithPartition
+from pie_utils.processor.document import DocumentWithPartitions
 from pie_utils.processor.document.regex_partitioner import (
     RegexPartitioner,
     _get_partitions_with_matcher,
@@ -24,10 +24,10 @@ def test_regex_partitioner():
     # partitions the text based on the given pattern. Since skip_initial_partition is True, so initial part of the text
     # will be ignored. label_whitelist do not contain <middle>, so it will be ignored as well. After partitioning, there
     # will be two partitions one with label <start> and another with <end>.
-    document = DocumentWithPartition(text=TEXT1)
+    document = DocumentWithPartitions(text=TEXT1)
     new_document = regex_partitioner(document)
 
-    partitions = new_document.partition
+    partitions = new_document.partitions
     labels = [partition.label for partition in partitions]
     assert len(partitions) == 4
     assert labels == ["partition"] * len(partitions)
@@ -57,9 +57,9 @@ def test_regex_partitioner_with_statistics():
 
     # The document contains a text separated by some markers like <start>, <middle> and <end>. After partitioning, there
     # are three partitions excluding initial part. Therefore, document length is not be equal to sum of partitions.
-    document = DocumentWithPartition(text=TEXT1)
+    document = DocumentWithPartitions(text=TEXT1)
     new_document = regex_partitioner(document)
-    partitions = new_document.partition
+    partitions = new_document.partitions
     assert len(partitions) == 3
     partition_lengths = regex_partitioner._statistics["partition_lengths"]
     assert partition_lengths == [60, 66, 38]
@@ -74,9 +74,9 @@ def test_regex_partitioner_with_statistics():
     # from each document, therefore statistics contains information from previous document as well. After partitioning,
     # there are two partitions excluding initial part. Therefore, the sum of document lengths is not be equal to sum of
     # partitions.
-    document = DocumentWithPartition(text=TEXT2)
+    document = DocumentWithPartitions(text=TEXT2)
     new_document = regex_partitioner(document)
-    partitions = new_document.partition
+    partitions = new_document.partitions
     assert len(partitions) == 2
     partition_lengths = regex_partitioner._statistics["partition_lengths"]
     assert partition_lengths == [60, 66, 38, 31, 22]
@@ -111,9 +111,9 @@ def test_regex_partitioner_without_label_group_id(label_whitelist, skip_initial_
     )
     # The document contains a text separated by some markers like <start>, <middle> and <end>. Since label_group_id is
     # None, therefore there will be no partitions.
-    document = DocumentWithPartition(text=TEXT1)
+    document = DocumentWithPartitions(text=TEXT1)
     new_document = regex_partitioner(document)
-    partitions = new_document.partition
+    partitions = new_document.partitions
     assert [partition.label for partition in partitions] == ["partition"] * len(partitions)
     if skip_initial_partition:
         if label_whitelist == ["<start>", "<middle>", "<end>"] or label_whitelist == []:
@@ -164,9 +164,9 @@ def test_regex_partitioner_with_label_group_id(label_whitelist, skip_initial_par
     )
     # The document contains a text separated by some markers like <start>, <middle> and <end>. Since label_group_id is
     # None, therefore there will be no partitions.
-    document = DocumentWithPartition(text=TEXT1)
+    document = DocumentWithPartitions(text=TEXT1)
     new_document = regex_partitioner(document)
-    partitions = new_document.partition
+    partitions = new_document.partitions
     labels = [partition.label for partition in partitions]
     if skip_initial_partition:
         if label_whitelist == ["<start>", "<end>"] or label_whitelist == [
@@ -242,10 +242,10 @@ def test_regex_partitioner_with_no_match_found(skip_initial_partition, label_whi
     )
     # The document contains a text separated by some markers like <start> and <end>. Since the given pattern is not
     # found in the document text therefore document is not partitioned.
-    document = DocumentWithPartition(text=TEXT2)
+    document = DocumentWithPartitions(text=TEXT2)
     new_document = regex_partitioner(document)
 
-    partitions = new_document.partition
+    partitions = new_document.partitions
     if skip_initial_partition:
         if label_whitelist == ["partition"]:
             assert len(partitions) == 0
@@ -275,7 +275,7 @@ def test_get_partitions_with_matcher():
     # The document contains a text separated by some markers like <start>, <middle> and <end>. finditer method is used
     # which returns non overlapping match from the text. Therefore, none of the partition created should have overlapped
     # span and all of them should be instances of LabeledSpan.
-    document = DocumentWithPartition(text=TEXT1)
+    document = DocumentWithPartitions(text=TEXT1)
     matcher = re.compile("(<start>|<middle>|<end>)").finditer
     partitions = []
     for partition in _get_partitions_with_matcher(

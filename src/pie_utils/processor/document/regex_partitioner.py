@@ -10,13 +10,13 @@ from pytorch_ie.annotations import LabeledSpan
 
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithPartition
+from ..document import DocumentWithPartitions
 
 logger = logging.getLogger(__name__)
 
 
 def _get_partitions_with_matcher(
-    document: DocumentWithPartition,
+    document: DocumentWithPartitions,
     matcher: Callable[[str], Iterable[Match]],
     label_group_id: int | None = None,  # = 1,
     label_whitelist: list[str] | None = None,
@@ -137,16 +137,16 @@ class RegexPartitioner(WithStatistics):
                     f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
                 )
 
-    def __call__(self, document: DocumentWithPartition):
+    def __call__(self, document: DocumentWithPartitions):
         partition_lengths = []
         for partition in _get_partitions_with_matcher(
             document, matcher=self.matcher, **self.partitioner_kwargs
         ):
-            document.partition.append(partition)
+            document.partitions.append(partition)
             partition_lengths.append(partition.end - partition.start)
 
         if self.collect_statistics:
-            self.update_statistics("num_partitions", len(document.partition))
+            self.update_statistics("num_partitions", len(document.partitions))
             self.update_statistics("partition_lengths", partition_lengths)
             self.update_statistics("document_lengths", len(document.text))
 
