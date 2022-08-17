@@ -15,13 +15,14 @@ from ..document import DocumentWithPartition
 logger = logging.getLogger(__name__)
 
 
-def get_partitions_with_matcher(
+def _get_partitions_with_matcher(
     document: DocumentWithPartition,
     matcher: Callable[[str], Iterable[Match]],
     label_group_id: int | None = None,  # = 1,
     label_whitelist: list[str] | None = None,
     skip_initial_partition: bool = False,  # = True
-    initial_partition_label: str = "initial part",
+    default_partition_label: str = "partition",
+    initial_partition_label: str | None = None,
 ) -> Iterator[LabeledSpan]:
     """This method yields LabeledSpans as partitions of the given document. matcher is used to
     search for a pattern in the document. If pattern is found then it returns Match objects that
@@ -50,17 +51,20 @@ def get_partitions_with_matcher(
     :param initial_partition_label: A string value used as a partition label for initial partition. This is only used when
                                 skip_initial_partition is False.
     """
+    if initial_partition_label is None:
+        initial_partition_label = default_partition_label
     previous_start = previous_label = None
     if not skip_initial_partition:
-        previous_start = 0
-        previous_label = initial_partition_label
+        if label_whitelist is None or initial_partition_label in label_whitelist:
+            previous_start = 0
+            previous_label = initial_partition_label
     for match in matcher(document.text):
         if label_group_id is not None:
             start = match.start(label_group_id)
             end = match.end(label_group_id)
             label = document.text[start:end]
         else:
-            label = None
+            label = default_partition_label
         if label_whitelist is None or label in label_whitelist:
             if previous_start is not None and previous_label is not None:
                 end = match.start()
