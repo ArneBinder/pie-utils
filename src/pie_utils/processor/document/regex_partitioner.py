@@ -95,22 +95,11 @@ class RegexPartitioner(WithStatistics):
                                 show_statistics can be used to get statistical insight over these lists.
     """
 
-    def __init__(
-        self,
-        pattern: str,
-        label_group_id: int | None = None,  # = 1,
-        label_whitelist: list[str] | None = None,
-        skip_initial_partition: bool = False,  # = True
-        initial_partition_label: str = "initial part",
-        collect_statistics: bool = False,
-    ):
-        self.label_group_id = label_group_id
-        self.label_whitelist = label_whitelist
-        self.skip_initial_partition = skip_initial_partition
+    def __init__(self, pattern: str, collect_statistics: bool = False, **partitioner_kwargs):
         self.matcher = re.compile(pattern).finditer
-        self.initial_partition_label = initial_partition_label
         self.collect_statistics = collect_statistics
         self.reset_statistics()
+        self.partitioner_kwargs = partitioner_kwargs
 
     def reset_statistics(self):
         self._statistics: dict[str, Any] = {
@@ -146,13 +135,8 @@ class RegexPartitioner(WithStatistics):
 
     def __call__(self, document: DocumentWithPartition):
         partition_lengths = []
-        for partition in get_partitions_with_matcher(
-            document,
-            matcher=self.matcher,
-            skip_initial_partition=self.skip_initial_partition,
-            label_whitelist=self.label_whitelist,
-            label_group_id=self.label_group_id,
-            initial_partition_label=self.initial_partition_label,
+        for partition in _get_partitions_with_matcher(
+            document, matcher=self.matcher, **self.partitioner_kwargs
         ):
             document.partition.append(partition)
             partition_lengths.append(partition.end - partition.start)
