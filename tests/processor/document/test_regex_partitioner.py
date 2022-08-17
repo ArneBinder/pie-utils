@@ -6,7 +6,7 @@ from pytorch_ie.annotations import LabeledSpan
 from pie_utils.processor.document import DocumentWithPartition
 from pie_utils.processor.document.regex_partitioner import (
     RegexPartitioner,
-    get_partitions_with_matcher,
+    _get_partitions_with_matcher,
 )
 from pie_utils.span.slice import have_overlap
 
@@ -19,9 +19,6 @@ def test_regex_partitioner():
     )
     regex_partitioner = RegexPartitioner(
         pattern="(<start>|<middle>|<end>)",
-        label_group_id=0,
-        label_whitelist=["<start>", "<end>"],
-        skip_initial_partition=True,
     )
     # The document contains a text separated by some markers like <start>, <middle> and <end>. RegexPartitioner
     # partitions the text based on the given pattern. Since skip_initial_partition is True, so initial part of the text
@@ -31,21 +28,15 @@ def test_regex_partitioner():
     new_document = regex_partitioner(document)
 
     partitions = new_document.partition
-    assert len(partitions) == 2
-    partition = partitions[0]
+    labels = [partition.label for partition in partitions]
+    assert len(partitions) == 4
+    assert labels == ["partition"] * len(partitions)
+    assert str(partitions[0]) == "This is initial text."
+    assert str(partitions[1]) == "<start>Jane lives in Berlin. this is no sentence about Karl."
     assert (
-        new_document.text[partition.start : partition.end]
-        == "<start>Jane lives in Berlin. this is no sentence about Karl.<middle>Seattle is a rainy city. "
-        "Jenny Durkan is the city's mayor."
+        str(partitions[2]) == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
     )
-    assert partition.label == "<start>"
-
-    partition = partitions[1]
-    assert (
-        new_document.text[partition.start : partition.end]
-        == "<end>Karl enjoys sunny days in Berlin."
-    )
-    assert partition.label == "<end>"
+    assert str(partitions[3]) == "<end>Karl enjoys sunny days in Berlin."
 
 
 def test_regex_partitioner_with_statistics():
@@ -76,7 +67,8 @@ def test_regex_partitioner_with_statistics():
     assert num_partitions == [3]
     document_lengths = regex_partitioner._statistics["document_lengths"]
     assert document_lengths == [len(TEXT1)]
-    assert sum(document_lengths) != sum(partition_lengths)
+    # Sum of partition length should be less than document length since initial partition is excluded.
+    assert sum(partition_lengths) < sum(document_lengths)
 
     # The document contains a text separated by some markers like <start> and <end>. RegexPartitioner appends statistics
     # from each document, therefore statistics contains information from previous document as well. After partitioning,
@@ -92,41 +84,21 @@ def test_regex_partitioner_with_statistics():
     assert num_partitions == [3, 2]
     document_lengths = regex_partitioner._statistics["document_lengths"]
     assert document_lengths == [len(TEXT1), len(TEXT2)]
-    assert sum(document_lengths) != sum(partition_lengths)
+    # Sum of partition length should be less than document length since initial partition is excluded.
+    assert sum(partition_lengths) < sum(document_lengths)
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(
+        TypeError,
+        match=r"type of given key \[<class 'str'>\] or value \[<class 'float'>\] is incorrect.",
+    ):
         regex_partitioner.update_statistics("num_partitions", 1.0)
-        assert e.value == "type of given key str or value float is incorrect."
 
     regex_partitioner.show_statistics()
 
 
-def test_regex_partitioner_with_initial_partition():
-    TEXT2 = "This is initial text.<start>Lily is mother of Harry.<end>Beth greets Emma."
-    regex_partitioner = RegexPartitioner(
-        pattern="(<start>|<middle>|<end>)",
-        label_group_id=0,
-        collect_statistics=True,
-        initial_partition_label="<initial_part>",
-    )
-    document = DocumentWithPartition(text=TEXT2)
-    new_document = regex_partitioner(document)
-
-    # The document contains a text separated by some markers like <start> and <end>. Since skip_initial_partition is
-    # False, therefore including initial partition there will be total three partitions. Label for first partition
-    # should be value of initial_partition_label and partition lengths should sum up to document length.
-    partitions = new_document.partition
-    assert len(partitions) == 3
-    partition = partitions[0]
-    assert new_document.text[partition.start : partition.end] == "This is initial text."
-    assert partition.label == "<initial_part>"
-    document_lengths = regex_partitioner._statistics["document_lengths"]
-    partition_lengths = regex_partitioner._statistics["partition_lengths"]
-    assert document_lengths == [len(TEXT2)]
-    assert sum(document_lengths) == sum(partition_lengths)
-
-
-def test_regex_partitioner_without_label_group_id():
+@pytest.mark.parametrize("label_whitelist", [["<start>", "<middle>", "<end>"], [], None])
+@pytest.mark.parametrize("skip_initial_partition", [True, False])
+def test_regex_partitioner_without_label_group_id(label_whitelist, skip_initial_partition):
     TEXT1 = (
         "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
         "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
@@ -134,54 +106,164 @@ def test_regex_partitioner_without_label_group_id():
     )
     regex_partitioner = RegexPartitioner(
         pattern="(<start>|<middle>|<end>)",
-        label_whitelist=["<start>", "<middle>", "<end>"],
-        skip_initial_partition=True,
+        label_whitelist=label_whitelist,
+        skip_initial_partition=skip_initial_partition,
     )
     # The document contains a text separated by some markers like <start>, <middle> and <end>. Since label_group_id is
     # None, therefore there will be no partitions.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
-
     partitions = new_document.partition
-    assert len(partitions) == 0
+    assert [partition.label for partition in partitions] == ["partition"] * len(partitions)
+    if skip_initial_partition:
+        if label_whitelist == ["<start>", "<middle>", "<end>"] or label_whitelist == []:
+            assert len(partitions) == 0
+        else:  # label_whitelist is None
+            assert len(partitions) == 3
+            assert (
+                str(partitions[0])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl."
+            )
+            assert (
+                str(partitions[1])
+                == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[2]) == "<end>Karl enjoys sunny days in Berlin."
+    else:  # skip_initial_partition is False
+        if label_whitelist == ["<start>", "<middle>", "<end>"] or label_whitelist == []:
+            assert len(partitions) == 0
+        else:  # label_whitelist is None
+            assert len(partitions) == 4
+            assert str(partitions[0]) == "This is initial text."
+            assert (
+                str(partitions[1])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl."
+            )
+            assert (
+                str(partitions[2])
+                == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[3]) == "<end>Karl enjoys sunny days in Berlin."
 
+
+@pytest.mark.parametrize(
+    "label_whitelist", [["partition", "<start>", "<end>"], ["<start>", "<end>"], [], None]
+)
+@pytest.mark.parametrize("skip_initial_partition", [True, False])
+def test_regex_partitioner_with_label_group_id(label_whitelist, skip_initial_partition):
+    TEXT1 = (
+        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
+        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        "<end>Karl enjoys sunny days in Berlin."
+    )
     regex_partitioner = RegexPartitioner(
         pattern="(<start>|<middle>|<end>)",
-        skip_initial_partition=True,
+        label_group_id=0,
+        label_whitelist=label_whitelist,
+        skip_initial_partition=skip_initial_partition,
     )
     # The document contains a text separated by some markers like <start>, <middle> and <end>. Since label_group_id is
     # None, therefore there will be no partitions.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
-
     partitions = new_document.partition
-    assert len(partitions) == 0
+    labels = [partition.label for partition in partitions]
+    if skip_initial_partition:
+        if label_whitelist == ["<start>", "<end>"] or label_whitelist == [
+            "partition",
+            "<start>",
+            "<end>",
+        ]:
+            assert len(partitions) == 2
+            assert labels == ["<start>", "<end>"]
+            assert (
+                str(partitions[0])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl.<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[1]) == "<end>Karl enjoys sunny days in Berlin."
+        elif label_whitelist == []:
+            assert len(partitions) == 0
+        else:  # label_whitelist is None
+            assert len(partitions) == 3
+            assert labels == ["<start>", "<middle>", "<end>"]
+            assert (
+                str(partitions[0])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl."
+            )
+            assert (
+                str(partitions[1])
+                == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[2]) == "<end>Karl enjoys sunny days in Berlin."
+    else:  # skip_initial_partition is False
+        if label_whitelist == ["<start>", "<end>"]:
+            assert len(partitions) == 2
+            assert labels == ["<start>", "<end>"]
+            assert (
+                str(partitions[0])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl.<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[1]) == "<end>Karl enjoys sunny days in Berlin."
+        elif label_whitelist == ["partition", "<start>", "<end>"]:
+            assert len(partitions) == 3
+            assert labels == ["partition", "<start>", "<end>"]
+            assert str(partitions[0]) == "This is initial text."
+            assert (
+                str(partitions[1])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl.<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[2]) == "<end>Karl enjoys sunny days in Berlin."
+        elif label_whitelist == []:
+            assert len(partitions) == 0
+        else:  # label_whitelist is None
+            assert len(partitions) == 4
+            assert labels == ["partition", "<start>", "<middle>", "<end>"]
+            assert str(partitions[0]) == "This is initial text."
+            assert (
+                str(partitions[1])
+                == "<start>Jane lives in Berlin. this is no sentence about Karl."
+            )
+            assert (
+                str(partitions[2])
+                == "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
+            )
+            assert str(partitions[3]) == "<end>Karl enjoys sunny days in Berlin."
 
+
+@pytest.mark.parametrize("label_whitelist", [["partition"], [], None])
+@pytest.mark.parametrize("skip_initial_partition", [True, False])
+def test_regex_partitioner_with_no_match_found(skip_initial_partition, label_whitelist):
+    TEXT2 = "This is initial text.<start>Lily is mother of Harry.<end>Beth greets Emma."
     regex_partitioner = RegexPartitioner(
-        pattern="(<start>|<middle>|<end>)",
-        label_whitelist=["<start>", "<middle>", "<end>"],
+        pattern="(<middle>)",
+        label_group_id=0,
+        label_whitelist=label_whitelist,
+        skip_initial_partition=skip_initial_partition,
     )
-    # The document contains a text separated by some markers like <start>, <middle> and <end>. Though label_group_id is
-    # None but skip_initial_partition is False, therefore whole document will be part of initial partition.
-    document = DocumentWithPartition(text=TEXT1)
+    # The document contains a text separated by some markers like <start> and <end>. Since the given pattern is not
+    # found in the document text therefore document is not partitioned.
+    document = DocumentWithPartition(text=TEXT2)
     new_document = regex_partitioner(document)
 
     partitions = new_document.partition
-    assert len(partitions) == 1
-    assert new_document.text[partitions[0].start : partitions[0].end] == TEXT1
-
-    regex_partitioner = RegexPartitioner(
-        pattern="(<start>|<middle>|<end>)",
-    )
-    # The document contains a text separated by some markers like <start>, <middle> and <end>. In this case, a partition
-    # will be created with label "initial part" but it's content will be up to first matched pattern i.e. just the
-    # initial part of the document.
-    document = DocumentWithPartition(text=TEXT1)
-    new_document = regex_partitioner(document)
-
-    partitions = new_document.partition
-    assert len(partitions) == 1
-    assert new_document.text[partitions[0].start : partitions[0].end] == "This is initial text."
+    if skip_initial_partition:
+        if label_whitelist == ["partition"]:
+            assert len(partitions) == 0
+        elif label_whitelist == []:
+            assert len(partitions) == 0
+        else:  # label_whitelist is None
+            assert len(partitions) == 0
+    else:
+        if label_whitelist == ["partition"]:
+            assert len(partitions) == 1
+            assert str(partitions[0]) == TEXT2
+            assert partitions[0].label == "partition"
+        elif label_whitelist == []:
+            assert len(partitions) == 0
+        else:  # label_whitelist is None
+            assert len(partitions) == 1
+            assert str(partitions[0]) == TEXT2
+            assert partitions[0].label == "partition"
 
 
 def test_get_partitions_with_matcher():
@@ -196,7 +278,7 @@ def test_get_partitions_with_matcher():
     document = DocumentWithPartition(text=TEXT1)
     matcher = re.compile("(<start>|<middle>|<end>)").finditer
     partitions = []
-    for partition in get_partitions_with_matcher(
+    for partition in _get_partitions_with_matcher(
         document=document,
         matcher=matcher,
         label_group_id=0,
@@ -206,60 +288,3 @@ def test_get_partitions_with_matcher():
         for p in partitions:
             assert not have_overlap((p.start, p.end), (partition.start, partition.end))
         partitions.append(partition)
-
-
-def test_regex_partitioner_with_no_parts_added():
-    TEXT1 = (
-        "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
-        "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
-        "<end>Karl enjoys sunny days in Berlin."
-    )
-    regex_partitioner = RegexPartitioner(
-        pattern="(<start>|<middle>|<end>)",
-        label_group_id=0,
-        label_whitelist=[],
-        skip_initial_partition=True,
-    )
-
-    # The document contains a text separated by some markers like <start>, <middle> and <end>. Since there is no label
-    # in label_whitelist, therefore no partitions are created.
-    document = DocumentWithPartition(text=TEXT1)
-    new_document = regex_partitioner(document)
-
-    partitions = new_document.partition
-    assert len(partitions) == 0
-
-    regex_partitioner = RegexPartitioner(
-        pattern="(<start>|<middle>|<end>)",
-        label_group_id=0,
-        label_whitelist=[],
-    )
-
-    # The document contains a text separated by some markers like <start>, <middle> and <end>. Although there is no label
-    # in label_whitelist but skip_initial_partition is False, therefore whole document will be created as a single
-    # partition with initial_partition_label.
-    document = DocumentWithPartition(text=TEXT1)
-    new_document = regex_partitioner(document)
-
-    partitions = new_document.partition
-    assert len(partitions) == 1
-    partition = partitions[0]
-    assert partition.label == "initial part"
-    assert new_document.text[partition.start : partition.end] == TEXT1
-
-
-def test_regex_partitioner_with_no_match_found():
-    TEXT2 = "This is initial text.<start>Lily is mother of Harry.<end>Beth greets Emma."
-    regex_partitioner = RegexPartitioner(
-        pattern="(<middle>)",
-        label_group_id=0,
-        label_whitelist=[],
-        skip_initial_partition=True,
-    )
-    # The document contains a text separated by some markers like <start> and <end>. Since the given pattern is not
-    # found in the document text therefore document is not partitioned.
-    document = DocumentWithPartition(text=TEXT2)
-    new_document = regex_partitioner(document)
-
-    partitions = new_document.partition
-    assert len(partitions) == 0
