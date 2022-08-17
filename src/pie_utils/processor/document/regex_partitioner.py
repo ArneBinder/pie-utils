@@ -23,22 +23,37 @@ def get_partitions_with_matcher(
     skip_initial_partition: bool = False,  # = True
     initial_partition_label: str = "initial part",
 ) -> Iterator[LabeledSpan]:
-    """Spans are created starting with the beginning of matching entries end ending with the start
-    of the next matching one or the end of the document.
+    """This method yields LabeledSpans as partitions of the given document. matcher is used to
+    search for a pattern in the document. If pattern is found then it returns Match objects that
+    contains matched groups. The required match group is selected using label_group_id to create a
+    partition label. The span of the partition ranges between two matched pattern. It should be
+    noted that none of the partitions overlap.
 
-    Entries with xml node names that are not in label_whitelist, if it is set, will not be
-    considered as match, i.e. their content will be added to the previous matching entry. If
-    label_group_id is set, the content of the respective match group will be taken as label.
-    Otherwise, it is set to None. If the flag skip_initial_partition is enabled, the content before
-    the first match is not added as a partition. Note that the initial partition will get None as
-    label since no matched element is available.
+    Besides the regular partitioning of the document, there are some other cases listed below:
+    1. Document can be converted into single partition with initial_partition_label if skip_initial_partition is False
+       and label_whitelist is empty list or label_group_id is None.
+    2. If only initial part of the document is required as a partition then set label_group_id and label_whitelist as
+       None and skip_initial_partition as False.
+    3. There will be no partitions if
+        a. matcher could not find pattern in document text
+        b. label_whitelist is empty list and skip_initial_partition is True
+        c. label_group_id and label_whitelist is None and skip_initial_partition is True
+        d. label_group_id is None and skip_initial_partition is False
+
+    :param document: A Document that is to be partitioned
+    :param matcher: A method that is used to match a pattern in the document text and return an iterator yielding the
+                    Match objects.
+    :param label_whitelist: A list of labels which are allowed to form a partition. (the default value is None)
+    :param label_group_id: An integer value to select suitable match group from Match object. (the default value is None)
+    :param skip_initial_partition: A boolean value that prevents initial partition to be saved in the document. (the
+                                default value is False)
+    :param initial_partition_label: A string value used as a partition label for initial partition. This is only used when
+                                skip_initial_partition is False.
     """
     previous_start = previous_label = None
     if not skip_initial_partition:
         previous_start = 0
-        previous_label = initial_partition_label  # This is added here because if we want to keep initial partition then without
-        # setting a label here, None is added as label which result in exception. We can have a parameter for
-        # initial_label.
+        previous_label = initial_partition_label
     for match in matcher(document.text):
         if label_group_id is not None:
             start = match.start(label_group_id)
@@ -62,21 +77,39 @@ def get_partitions_with_matcher(
 
 
 class RegexPartitioner(WithStatistics):
+    """RegexPartitioner partitions a document into multiple parts using a regular expression.
+
+    :param pattern: A regular expression to search for in the text.
+    :param label_group_id: An integer value to select required match group from Match object (the default value is None)
+    :param label_whitelist: A list of labels which are allowed to form a partition. (the default value is None)
+    :param skip_initial_partition: A boolean value that prevents initial partition to be saved in the document. (the
+                                default value is False)
+    :param initial_partition_label: A string value to be used as partition label for the initial partition. This label doesn't
+                                have to be included in label_whitelist. This is only used when skip_initial_partition is
+                                False. (the default value is "initial part")
+    :param collect_statistics: A boolean value that allows to collect relevant statistics of the document after
+                                partitioning. When this parameter is enabled, following stats are collected:
+                                1. partition_lengths: list of lengths of all partitions
+                                2. num_partitions: list of number of partitions in each document
+                                3. document_lengths: list of document lengths
+                                show_statistics can be used to get statistical insight over these lists.
+    """
+
     def __init__(
         self,
         pattern: str,
         label_group_id: int | None = None,  # = 1,
         label_whitelist: list[str] | None = None,
         skip_initial_partition: bool = False,  # = True
-        collect_statistics: bool = False,
         initial_partition_label: str = "initial part",
+        collect_statistics: bool = False,
     ):
         self.label_group_id = label_group_id
         self.label_whitelist = label_whitelist
         self.skip_initial_partition = skip_initial_partition
         self.matcher = re.compile(pattern).finditer
-        self.collect_statistics = collect_statistics
         self.initial_partition_label = initial_partition_label
+        self.collect_statistics = collect_statistics
         self.reset_statistics()
 
     def reset_statistics(self):

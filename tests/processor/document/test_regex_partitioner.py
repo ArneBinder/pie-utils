@@ -23,6 +23,10 @@ def test_regex_partitioner():
         label_whitelist=["<start>", "<end>"],
         skip_initial_partition=True,
     )
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. RegexPartitioner
+    # partitions the text based on the given pattern. Since skip_initial_partition is True, so initial part of the text
+    # will be ignored. label_whitelist do not contain <middle>, so it will be ignored as well. After partitioning, there
+    # will be two partitions one with label <start> and another with <end>.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
 
@@ -60,6 +64,8 @@ def test_regex_partitioner_with_statistics():
         collect_statistics=True,
     )
 
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. After partitioning, there
+    # are three partitions excluding initial part. Therefore, document length is not be equal to sum of partitions.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
     partitions = new_document.partition
@@ -72,6 +78,10 @@ def test_regex_partitioner_with_statistics():
     assert document_lengths == [len(TEXT1)]
     assert sum(document_lengths) != sum(partition_lengths)
 
+    # The document contains a text separated by some markers like <start> and <end>. RegexPartitioner appends statistics
+    # from each document, therefore statistics contains information from previous document as well. After partitioning,
+    # there are two partitions excluding initial part. Therefore, the sum of document lengths is not be equal to sum of
+    # partitions.
     document = DocumentWithPartition(text=TEXT2)
     new_document = regex_partitioner(document)
     partitions = new_document.partition
@@ -102,6 +112,9 @@ def test_regex_partitioner_with_initial_partition():
     document = DocumentWithPartition(text=TEXT2)
     new_document = regex_partitioner(document)
 
+    # The document contains a text separated by some markers like <start> and <end>. Since skip_initial_partition is
+    # False, therefore including initial partition there will be total three partitions. Label for first partition
+    # should be value of initial_partition_label and partition lengths should sum up to document length.
     partitions = new_document.partition
     assert len(partitions) == 3
     partition = partitions[0]
@@ -124,6 +137,8 @@ def test_regex_partitioner_without_label_group_id():
         label_whitelist=["<start>", "<middle>", "<end>"],
         skip_initial_partition=True,
     )
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. Since label_group_id is
+    # None, therefore there will be no partitions.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
 
@@ -175,6 +190,9 @@ def test_get_partitions_with_matcher():
         "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
         "<end>Karl enjoys sunny days in Berlin."
     )
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. finditer method is used
+    # which returns non overlapping match from the text. Therefore, none of the partition created should have overlapped
+    # span and all of them should be instances of LabeledSpan.
     document = DocumentWithPartition(text=TEXT1)
     matcher = re.compile("(<start>|<middle>|<end>)").finditer
     partitions = []
@@ -203,6 +221,8 @@ def test_regex_partitioner_with_no_parts_added():
         skip_initial_partition=True,
     )
 
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. Since there is no label
+    # in label_whitelist, therefore no partitions are created.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
 
@@ -214,6 +234,10 @@ def test_regex_partitioner_with_no_parts_added():
         label_group_id=0,
         label_whitelist=[],
     )
+
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. Although there is no label
+    # in label_whitelist but skip_initial_partition is False, therefore whole document will be created as a single
+    # partition with initial_partition_label.
     document = DocumentWithPartition(text=TEXT1)
     new_document = regex_partitioner(document)
 
@@ -232,6 +256,8 @@ def test_regex_partitioner_with_no_match_found():
         label_whitelist=[],
         skip_initial_partition=True,
     )
+    # The document contains a text separated by some markers like <start> and <end>. Since the given pattern is not
+    # found in the document text therefore document is not partitioned.
     document = DocumentWithPartition(text=TEXT2)
     new_document = regex_partitioner(document)
 
