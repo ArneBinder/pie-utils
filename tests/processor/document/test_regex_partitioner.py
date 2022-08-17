@@ -130,6 +130,44 @@ def test_regex_partitioner_without_label_group_id():
     partitions = new_document.partition
     assert len(partitions) == 0
 
+    regex_partitioner = RegexPartitioner(
+        pattern="(<start>|<middle>|<end>)",
+        skip_initial_partition=True,
+    )
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. Since label_group_id is
+    # None, therefore there will be no partitions.
+    document = DocumentWithPartition(text=TEXT1)
+    new_document = regex_partitioner(document)
+
+    partitions = new_document.partition
+    assert len(partitions) == 0
+
+    regex_partitioner = RegexPartitioner(
+        pattern="(<start>|<middle>|<end>)",
+        label_whitelist=["<start>", "<middle>", "<end>"],
+    )
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. Though label_group_id is
+    # None but skip_initial_partition is False, therefore whole document will be part of initial partition.
+    document = DocumentWithPartition(text=TEXT1)
+    new_document = regex_partitioner(document)
+
+    partitions = new_document.partition
+    assert len(partitions) == 1
+    assert new_document.text[partitions[0].start : partitions[0].end] == TEXT1
+
+    regex_partitioner = RegexPartitioner(
+        pattern="(<start>|<middle>|<end>)",
+    )
+    # The document contains a text separated by some markers like <start>, <middle> and <end>. In this case, a partition
+    # will be created with label "initial part" but it's content will be up to first matched pattern i.e. just the
+    # initial part of the document.
+    document = DocumentWithPartition(text=TEXT1)
+    new_document = regex_partitioner(document)
+
+    partitions = new_document.partition
+    assert len(partitions) == 1
+    assert new_document.text[partitions[0].start : partitions[0].end] == "This is initial text."
+
 
 def test_get_partitions_with_matcher():
     TEXT1 = (

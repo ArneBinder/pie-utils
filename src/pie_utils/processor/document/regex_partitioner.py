@@ -47,7 +47,7 @@ def get_partitions_with_matcher(
         else:
             label = None
         if label_whitelist is None or label in label_whitelist:
-            if previous_start is not None:
+            if previous_start is not None and previous_label is not None:
                 end = match.start()
                 span = LabeledSpan(start=previous_start, end=end, label=previous_label)
                 yield span
@@ -55,7 +55,7 @@ def get_partitions_with_matcher(
             previous_start = match.start()
             previous_label = label
 
-    if previous_start is not None:
+    if previous_start is not None and previous_label is not None:
         end = len(document.text)
         span = LabeledSpan(start=previous_start, end=end, label=previous_label)
         yield span
