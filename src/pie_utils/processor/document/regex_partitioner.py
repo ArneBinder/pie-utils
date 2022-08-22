@@ -36,9 +36,10 @@ def _get_partitions_with_matcher(
                     Match objects.
     :param label_group_id: An integer value (default:None) to select the desired match group from the Match object. This match
                             group is then used to create a label for the partition.
-    :param label_whitelist: An optional list of labels (default:None) which are allowed to form a partition.
-                            label_whitelist is the whitelist for the labels created using label_group_id. Therefore,
-                            this is only useful when label_group_id is not None.
+    :param label_whitelist: An optional list of labels (default:None) which are allowed to form a partition if label_group_id
+                            is not None. label_whitelist is the whitelist for the labels created using label_group_id.
+                            If label_whitelist is None, then all the labels created using label_group_id will form a
+                            partition.
     :param skip_initial_partition: A boolean value (default:False) that prevents the initial partition to be saved in the
                                 document.
     :param default_partition_label: A string value (default:partition) to be used as the default label for the parts if no
