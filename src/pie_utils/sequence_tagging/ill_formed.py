@@ -1,9 +1,9 @@
-from typing import List, Optional
+from typing import List
 
-from pytorch_ie.utils.span import InvalidTagSequence
+from pie_utils.sequence_tagging import InvalidTagSequence
 
 
-def update_previous_label(tag_sequence, current_tag_type):
+def _update_previous_label(tag_sequence, current_tag_type):
     """When current tag type in a span is different from the next span tag type, we convert using
     following rule :
 
@@ -17,7 +17,7 @@ def update_previous_label(tag_sequence, current_tag_type):
     tag_sequence.append(f"{new_tag}-{current_tag_type}")
 
 
-def process_B(tag_sequence, new_tag_sequence, label, index, process_tag):
+def _process_B(tag_sequence, new_tag_sequence, label, index, process_tag):
     """Process a span starting with a B, it receives the given tag sequence, a new tag sequence
     where fixed sequence is stored, current label, index and finally a method process_tag which can
     be process_I in case of BIOUL and process_O in case of BOUL."""
@@ -44,12 +44,12 @@ def process_B(tag_sequence, new_tag_sequence, label, index, process_tag):
         else:
             # BIOUL : Ba Lb or Ia Lb to Ua Lb or La Lb respectively
             # BOUL : Ba Lb or O Lb to Ua Lb or La Lb respectively
-            update_previous_label(new_tag_sequence, current_tag_type)
+            _update_previous_label(new_tag_sequence, current_tag_type)
             index -= 1
     return index, label
 
 
-def fix_ill_formed_bioul_tag_sequence(
+def fix_bioul(
     tag_sequence: List[str],
 ) -> List[str]:
     """In all the example shown in the method below we refer to BIOUL tags as tag and attached type
@@ -66,7 +66,7 @@ def fix_ill_formed_bioul_tag_sequence(
         while label[0] == "I" and index < len(tag_sequence):
             if label.partition("-")[2] != current_tag_type:
                 # I with different tag type : Ba Ib or Ba Ia Ib convert to Ua Ib or Ba La Ib
-                update_previous_label(new_tag_sequence, current_tag_type)
+                _update_previous_label(new_tag_sequence, current_tag_type)
                 index -= 1
                 return index, label
             else:
@@ -84,7 +84,7 @@ def fix_ill_formed_bioul_tag_sequence(
                 label = tag_sequence[index]
         if label[0] == "O":
             # if we encounter "O" after processing I then convert last I to L , e.g : Ba Ia Ia O to Ba Ia La O
-            update_previous_label(new_tag_sequence, current_tag_type)
+            _update_previous_label(new_tag_sequence, current_tag_type)
             index -= 1
         if label[0] in ["U", "B"]:
             # if we encounter U or B after processing I
@@ -95,7 +95,7 @@ def fix_ill_formed_bioul_tag_sequence(
                 index, label = process_I(index, label, current_tag_type)
             else:
                 # Ia Ub or Ia Bb to La *b
-                update_previous_label(new_tag_sequence, current_tag_type)
+                _update_previous_label(new_tag_sequence, current_tag_type)
                 index -= 1
         return index, label
 
@@ -108,7 +108,7 @@ def fix_ill_formed_bioul_tag_sequence(
             new_tag_sequence.append(label)
         elif label[0] == "B":
             # span starts with B
-            index, label = process_B(tag_sequence, new_tag_sequence, label, index, process_I)
+            index, label = _process_B(tag_sequence, new_tag_sequence, label, index, process_I)
         else:
             # if span starts with other than B and U
             if label != "O":
@@ -135,7 +135,7 @@ def fix_ill_formed_bioul_tag_sequence(
                             del new_tag_sequence[-1]
                             new_tag_sequence.append(f"B-{previous_tag_type}")
                             new_tag_sequence.append(label)
-                        elif previous_label == label:
+                        else:  # previous_label == label:
                             # La La to Ia La
                             del new_tag_sequence[-1]
                             new_tag_sequence.append(f"I-{previous_tag_type}")
@@ -144,7 +144,7 @@ def fix_ill_formed_bioul_tag_sequence(
                     # if span starts with I, convert to B and start processing span
                     previous_tag_type = label.partition("-")[2]
                     label = f"B-{previous_tag_type}"
-                    index, label = process_B(
+                    index, label = _process_B(
                         tag_sequence, new_tag_sequence, label, index, process_I
                     )
                 else:
@@ -156,7 +156,7 @@ def fix_ill_formed_bioul_tag_sequence(
     return new_tag_sequence
 
 
-def fix_ill_formed_boul_tag_sequence(
+def fix_boul(
     tag_sequence: List[str],
 ) -> List[str]:
     """In all the example shown in the method below we refer to BOUL tags as tag and attached type
@@ -190,7 +190,7 @@ def fix_ill_formed_boul_tag_sequence(
                 index, label = process_O(index, label, current_tag_type)
             else:
                 # if it's of different tag type then end span at last index
-                update_previous_label(new_tag_sequence, current_tag_type)
+                _update_previous_label(new_tag_sequence, current_tag_type)
                 index -= 1
         return index, label
 
@@ -204,7 +204,7 @@ def fix_ill_formed_boul_tag_sequence(
             new_tag_sequence.append(label)
         elif label[0] == "B":
             # if span starts with B
-            index, label = process_B(tag_sequence, new_tag_sequence, label, index, process_O)
+            index, label = _process_B(tag_sequence, new_tag_sequence, label, index, process_O)
         elif label[0] == "L":
             # if span starts with L, process span in backward direction
             i = len(new_tag_sequence) - 1
@@ -259,7 +259,7 @@ def fix_ill_formed_boul_tag_sequence(
     return new_tag_sequence
 
 
-def fix_ill_formed_bio_tag_sequence(tag_sequence: List[str]):
+def fix_bio(tag_sequence: List[str]):
     """Given a sequence corresponding to BIO tags, extracts spans. Spans are inclusive and can be
     of zero length, representing a single word span. Ill-formed spans are also included (i.e those
     which do not start with a "B-LABEL"), as otherwise it is possible to get a perfect precision
@@ -331,7 +331,7 @@ def fix_ill_formed_bio_tag_sequence(tag_sequence: List[str]):
     return new_tag_sequence
 
 
-def remove_ill_formed_bioul_tag_sequence(
+def remove_bioul(
     tag_sequence: List[str],
 ) -> List[str]:
     """removes ill formed tag sequence from given sequence.
@@ -371,7 +371,7 @@ def remove_ill_formed_bioul_tag_sequence(
     return tag_sequence
 
 
-def remove_ill_formed_boul_tag_sequence(
+def remove_boul(
     tag_sequence: List[str],
 ) -> List[str]:
     """removes ill formed tag sequence from given sequence.
@@ -411,7 +411,7 @@ def remove_ill_formed_boul_tag_sequence(
     return tag_sequence
 
 
-def remove_ill_formed_bio_tag_sequence(
+def remove_bio(
     tag_sequence: List[str],
 ) -> List[str]:
     index = 0
@@ -437,29 +437,29 @@ def remove_ill_formed_bio_tag_sequence(
     return tag_sequence
 
 
-def remove_ill_formed_tag_sequence(
+def remove_encoding(
     tag_sequence: List[str],
     encoding: str,
 ) -> List[str]:
     if encoding == "BIOUL":
-        return remove_ill_formed_bioul_tag_sequence(tag_sequence)
+        return remove_bioul(tag_sequence)
     elif encoding == "BOUL":
-        return remove_ill_formed_boul_tag_sequence(tag_sequence)
+        return remove_boul(tag_sequence)
     elif encoding == "IOB2":
-        return remove_ill_formed_bio_tag_sequence(tag_sequence)
+        return remove_bio(tag_sequence)
     else:
         raise ValueError(f"Unknown Coding scheme {encoding}.")
 
 
-def fix_ill_formed_tag_sequence(
+def fix_encoding(
     tag_sequence: List[str],
     encoding: str,
 ) -> List[str]:
     if encoding == "BIOUL":
-        return fix_ill_formed_bioul_tag_sequence(tag_sequence)
+        return fix_bioul(tag_sequence)
     elif encoding == "BOUL":
-        return fix_ill_formed_boul_tag_sequence(tag_sequence)
+        return fix_boul(tag_sequence)
     elif encoding == "IOB2":
-        return fix_ill_formed_bio_tag_sequence(tag_sequence)
+        return fix_bio(tag_sequence)
     else:
         raise ValueError(f"Unknown Coding scheme {encoding}.")
