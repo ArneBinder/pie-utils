@@ -332,6 +332,30 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
     new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
 
+    bioul_sequence = [
+        "U-background_claim",
+        "L-background_claim",
+    ]
+    new_bioul_sequence = [
+        "B-background_claim",
+        "L-background_claim",
+    ]
+    new_tag_sequence = fix_bioul(bioul_sequence)
+    assert new_tag_sequence == new_bioul_sequence
+
+    bioul_sequence = [
+        "B-background_claim",
+        "L-background_claim",
+        "L-background_claim",
+    ]
+    new_bioul_sequence = [
+        "B-background_claim",
+        "I-background_claim",
+        "L-background_claim",
+    ]
+    new_tag_sequence = fix_bioul(bioul_sequence)
+    assert new_tag_sequence == new_bioul_sequence
+
 
 def test_fix_tag_sequence_with_ill_formed_bio_tag():
 
@@ -395,6 +419,19 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "O",
     ]
     new_tag_sequence = fix_ill_formed_bio_tag_sequence(bio_sequence)
+    assert new_tag_sequence == new_bio_sequence
+
+    bio_sequence = [
+        "B-background_claim",
+        "I-background_claim",
+        "B-data",
+    ]
+    new_bio_sequence = [
+        "B-background_claim",
+        "I-background_claim",
+        "B-data",
+    ]
+    new_tag_sequence = fix_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
 
@@ -900,3 +937,27 @@ def test_remove_ill_formed__bio_tag_sequence():
     ]
     new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
+
+
+def test_invalid_tag_sequence():
+    bio_sequence = [
+        "B-background_claim",
+        "I-background_claim",
+        "L-background_claim",
+    ]
+    with pytest.raises(InvalidTagSequence):
+        fix_bio(bio_sequence)
+
+    bioul_sequence = [
+        "U-background_claim",
+        "M-background_claim",
+    ]
+    with pytest.raises(InvalidTagSequence):
+        fix_bioul(bioul_sequence)
+
+    boul_sequence = [
+        "U-background_claim",
+        "M-background_claim",
+    ]
+    with pytest.raises(InvalidTagSequence):
+        fix_boul(boul_sequence)
