@@ -81,7 +81,7 @@ repos:
         args:
           - --skip=logs/**,data/**
           # required for plotext.hist()
-          - --ignore-words-list=hist
+          - --ignore-words-list=hist,ba
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
