@@ -1,10 +1,13 @@
-from pie_utils.sequence_tagging.ill_formed_tag_sequence import (
-    fix_ill_formed_bio_tag_sequence,
-    fix_ill_formed_bioul_tag_sequence,
-    fix_ill_formed_boul_tag_sequence,
-    remove_ill_formed_bio_tag_sequence,
-    remove_ill_formed_bioul_tag_sequence,
-    remove_ill_formed_boul_tag_sequence,
+import pytest
+
+from pie_utils.sequence_tagging import InvalidTagSequence
+from pie_utils.sequence_tagging.ill_formed import (
+    fix_bio,
+    fix_bioul,
+    fix_boul,
+    remove_bio,
+    remove_bioul,
+    remove_boul,
 )
 
 BIOUL_ENCODING_NAME = "BIOUL"
@@ -28,7 +31,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
     # 2. If there is U tag within a span
     boul_sequence = [
@@ -41,7 +44,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
     ]
     new_boul_sequence = ["O", "B-background_claim", "O", "O", "L-background_claim", "O"]
 
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -59,7 +62,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
     ]
 
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -73,7 +76,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "L-background_claim",
     ]
 
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -86,7 +89,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -98,7 +101,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
     ]
 
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -112,7 +115,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "U-background_claim",
     ]
 
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
     # 3. If span starts with L
 
@@ -126,7 +129,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
         "U-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -139,7 +142,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
         "O",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     # L O L to O O L
@@ -153,7 +156,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -168,7 +171,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "O",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -181,7 +184,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "B-background_claim",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -196,7 +199,7 @@ def test_fix_tag_sequence_with_ill_formed_boul_tag():
         "B-background_claim",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = fix_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
 
@@ -215,7 +218,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "L-background_claim",
         "O",  # "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     # 2. If there is U tag within a span
     bioul_sequence = [
@@ -232,7 +235,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "L-background_claim",
         "O",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "B-background_claim",
@@ -248,7 +251,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "U-background_claim",
         "O",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     # 3. If there is O tag within a span
     bioul_sequence = [
@@ -266,7 +269,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "B-background_claim",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     # 4. If span starts with I
     bioul_sequence = [
@@ -283,7 +286,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "I-background_claim",
         "L-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "O",
@@ -299,7 +302,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "O",
         "U-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "B-data",
@@ -311,13 +314,13 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "L-data",
         "U-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "U-data",
         "O",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == bioul_sequence
     bioul_sequence = [
         "U-data",
@@ -329,7 +332,7 @@ def test_fix_tag_sequence_with_ill_formed_bioul_tag():
         "O",
         "U-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = fix_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
 
     bioul_sequence = [
@@ -369,7 +372,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-background_claim",
         "I-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = fix_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -382,7 +385,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-data",
         "B-background_claim",
     ]
-    new_tag_sequence = fix_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = fix_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -395,7 +398,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-data",
         "I-data",
     ]
-    new_tag_sequence = fix_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = fix_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = ["B-background_claim", "I-background_claim", "I-data", "O"]
@@ -405,7 +408,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-data",
         "O",
     ]
-    new_tag_sequence = fix_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = fix_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -418,7 +421,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "I-background_claim",
         "O",
     ]
-    new_tag_sequence = fix_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = fix_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -454,7 +457,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "B-data",
         "L-data",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
 
     bioul_sequence = [
@@ -475,7 +478,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "U-data",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
 
     bioul_sequence = [
@@ -490,7 +493,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",  # "L-background_claim",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     # 2. If there is U tag within a span
     bioul_sequence = [
@@ -507,7 +510,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "B-background_claim",
@@ -523,7 +526,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     # 3. If there is O tag within a span
     bioul_sequence = [
@@ -541,7 +544,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     # 4. If span starts with I
     bioul_sequence = [
@@ -558,7 +561,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "O",
@@ -574,7 +577,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
     bioul_sequence = [
         "B-data",
@@ -586,7 +589,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
 
     bioul_sequence = [
@@ -599,7 +602,7 @@ def test_remove_ill_formed__bioul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bioul_tag_sequence(bioul_sequence)
+    new_tag_sequence = remove_bioul(bioul_sequence)
     assert new_tag_sequence == new_bioul_sequence
 
 
@@ -621,7 +624,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "U-data",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -642,7 +645,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -659,7 +662,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
     # 2. If there is U tag within a span
     boul_sequence = [
@@ -672,7 +675,7 @@ def test_remove_ill_formed_boul_tag_sequence():
     ]
     new_boul_sequence = ["O", "O", "O", "O", "O", "O"]
 
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -690,7 +693,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
     ]
 
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -704,7 +707,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
     ]
 
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -717,7 +720,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -729,7 +732,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
     ]
 
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -743,7 +746,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
     ]
 
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -756,7 +759,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -769,7 +772,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -782,7 +785,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -797,7 +800,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -810,7 +813,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
     boul_sequence = [
@@ -825,7 +828,7 @@ def test_remove_ill_formed_boul_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_boul_tag_sequence(boul_sequence)
+    new_tag_sequence = remove_boul(boul_sequence)
     assert new_tag_sequence == new_boul_sequence
 
 
@@ -843,7 +846,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
     ]
 
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -858,7 +861,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -873,7 +876,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "I-data",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -886,7 +889,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "B-background_claim",
         "I-background_claim",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -899,7 +902,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "B-data",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -912,7 +915,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "B-data",
         "I-data",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = ["B-background_claim", "I-background_claim", "I-data", "O"]
@@ -922,7 +925,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -935,7 +938,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_ill_formed_bio_tag_sequence(bio_sequence)
+    new_tag_sequence = remove_bio(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
 
