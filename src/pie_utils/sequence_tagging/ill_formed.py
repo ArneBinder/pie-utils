@@ -140,8 +140,6 @@ def fix_ill_formed_bioul_tag_sequence(
                             del new_tag_sequence[-1]
                             new_tag_sequence.append(f"I-{previous_tag_type}")
                             new_tag_sequence.append(label)
-                        else:
-                            raise InvalidTagSequence(tag_sequence)
                 elif label[0] == "I":
                     # if span starts with I, convert to B and start processing span
                     previous_tag_type = label.partition("-")[2]
@@ -294,8 +292,6 @@ def fix_ill_formed_bio_tag_sequence(tag_sequence: List[str]):
             index += 1
             if index < len(tag_sequence):
                 label = tag_sequence[index]
-            else:
-                continue
             if label[0] == "B":
                 # when there is B after B, we process again from second B
                 continue
@@ -427,8 +423,6 @@ def remove_ill_formed_bio_tag_sequence(
             index += 1
             if index < len(tag_sequence):
                 label = tag_sequence[index]
-            else:
-                continue
             if label[0] == "B":
                 continue
             while label == expected_label and index < len(tag_sequence):
