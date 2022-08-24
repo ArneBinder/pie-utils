@@ -229,6 +229,7 @@ def token_spans_to_tag_sequence(
     base_sequence_length: int,
     coding_scheme: str = "IOB2",
     offset: int = 0,
+    include_ill_formed: bool = True,
 ) -> List[str]:
     # create IOB2 encoding
     tags = ["O"] * base_sequence_length
@@ -244,6 +245,11 @@ def token_spans_to_tag_sequence(
         # create IOB2 encoding
         tags[_start] = f"B-{label}"
         tags[_start + 1 : _end] = [f"I-{label}"] * (len(previous_tags) - 1)
+
+    if include_ill_formed:
+        tags = fix_encoding(tags, "IOB2")
+    else:
+        tags = remove_encoding(tags, "IOB2")
 
     # Recode the labels if necessary.
     if coding_scheme == "BIOUL":
