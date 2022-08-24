@@ -106,7 +106,7 @@ def test_spans_to_tag_sequence(
     ]
     base_sequence_lengths = [len(special_tokens_masks[0]), len(special_tokens_masks[1])]
     if encoding is None:
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             labeled_span = labeled_spans[0]
             token_spans_to_tag_sequence(
                 labeled_spans=labeled_span,
@@ -183,7 +183,7 @@ def test_tag_sequence_to_span(encoding, true_tag_sequences):
         ],
     }
     if encoding is None:
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             tag_sequence = sequence_to_span[BIOUL_ENCODING_NAME][0][0]
             tag_sequence_to_token_spans(tag_sequence, coding_scheme=encoding)
     else:
@@ -238,7 +238,7 @@ def test_tag_sequence_to_span_without_include_ill_formed(encoding, true_tag_sequ
         ],
     }
     if encoding is None:
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             tag_sequence = sequence_to_span[BIOUL_ENCODING_NAME][0][0]
             tag_sequence_to_token_spans(
                 tag_sequence, coding_scheme=encoding, include_ill_formed=False
