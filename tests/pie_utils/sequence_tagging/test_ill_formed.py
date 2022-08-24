@@ -955,7 +955,7 @@ def test_invalid_tag_sequence():
         "U-background_claim",
         "M-background_claim",
     ]
-    with pytest.raises(InvalidTagSequence):
+    with pytest.raises(InvalidTagSequence, match=f"{bioul_sequence}"):
         fix_bioul(bioul_sequence)
 
     boul_sequence = [
