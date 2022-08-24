@@ -1,16 +1,9 @@
 import logging
-import warnings
-from typing import Callable, List, Optional, Set, Tuple, TypeVar
+from typing import List, Tuple, TypeVar
 
-from pie_utils.span.ill_formed_tag_sequence import (
-    fix_ill_formed_tag_sequence,
-    remove_ill_formed_tag_sequence,
-)
+from pie_utils.sequence_tagging.ill_formed import fix_encoding, remove_encoding
 
 logger = logging.getLogger(__name__)
-
-# from allennlp.common.checks import ConfigurationError
-# from allennlp.data.tokenizers import Token
 
 
 TypedSpan = Tuple[int, Tuple[int, int]]
@@ -283,9 +276,9 @@ def tag_sequence_to_token_spans(
 ):
 
     if include_ill_formed:
-        new_tag_sequence = fix_ill_formed_tag_sequence(tag_sequence, coding_scheme)
+        new_tag_sequence = fix_encoding(tag_sequence, coding_scheme)
     else:
-        new_tag_sequence = remove_ill_formed_tag_sequence(tag_sequence, coding_scheme)
+        new_tag_sequence = remove_encoding(tag_sequence, coding_scheme)
     if coding_scheme == "BIOUL":
         labeled_spans = bioul_tags_to_spans(
             new_tag_sequence,
@@ -296,13 +289,14 @@ def tag_sequence_to_token_spans(
             new_tag_sequence,
             classes_to_ignore=classes_to_ignore,
         )
-    elif coding_scheme == "IOB2":
+    else:  # coding_scheme = "IOB2":
         labeled_spans = iob2_tags_to_spans(
             tag_sequence,
             classes_to_ignore=classes_to_ignore,
         )
-    else:
-        raise ValueError(f"Unknown Coding scheme {coding_scheme}.")
+        # handled in fix or remove encoding
+    """else:
+        raise ValueError(f"Unknown Coding scheme {coding_scheme}.")"""
 
     return labeled_spans
 
