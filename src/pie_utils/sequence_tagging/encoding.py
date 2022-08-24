@@ -136,9 +136,10 @@ def to_bioul(tag_sequence: List[str], encoding: str = "IOB1") -> List[str]:
     bioul_sequence : `List[str]`
         The tag sequence encoded in IOB1, e.g. ["B-PER", "L-PER", "O"].
     """
-    if encoding not in {"IOB1", "IOB2"}:
+    # already handled in token_spans_to_tag_sequence
+    """if encoding not in {"IOB1", "IOB2"}:
         # raise ConfigurationError(f"Invalid encoding {encoding} passed to 'to_bioul'.")
-        raise ValueError(f"Invalid encoding {encoding} passed to 'to_bioul'.")
+        raise ValueError(f"Invalid encoding {encoding} passed to 'to_bioul'.")"""
 
     def replace_label(full_label, new_label):
         # example: full_label = 'I-PER', new_label = 'U', returns 'U-PER'
@@ -178,12 +179,13 @@ def to_bioul(tag_sequence: List[str], encoding: str = "IOB1") -> List[str]:
         # token = {'token': 'Matt', "labels": {'conll2003': "B-PER"}
         #                   'gold': 'I-PER'}
         # where 'gold' is the raw value from the CoNLL data set
-        if label is None and len(stack) == 0:
-            bioul_sequence.append(label)
-        elif label is None and len(stack) > 0:
-            process_stack(stack, bioul_sequence)
-            bioul_sequence.append(label)
-        elif label == "O" and len(stack) == 0:
+        # None label is not created anymore
+        """if label is None and len(stack) == 0:
+
+        bioul_sequence.append(label) elif label is None and len(stack) > 0: process_stack(stack,
+        bioul_sequence)     bioul_sequence.append(label)
+        """
+        if label == "O" and len(stack) == 0:
             bioul_sequence.append(label)
         elif label == "O" and len(stack) > 0:
             # need to process the entries on the stack plus this one
@@ -194,32 +196,41 @@ def to_bioul(tag_sequence: List[str], encoding: str = "IOB1") -> List[str]:
             # if it is then append to stack
             # otherwise this start a new entity if the type
             # is different
-            if len(stack) == 0:
-                if encoding == "IOB2":
+            # already taken care of in token_spans_to_tag_sequence
+            """if len(stack) == 0:
+
+            if encoding == "IOB2":
                     raise InvalidTagSequence(tag_sequence)
                 stack.append(label)
             else:
-                # check if the previous type is the same as this one
-                this_type = label.partition("-")[2]
-                prev_type = stack[-1].partition("-")[2]
-                if this_type == prev_type:
-                    stack.append(label)
-                else:
+            """
+            # check if the previous type is the same as this one
+            this_type = label.partition("-")[2]
+            prev_type = stack[-1].partition("-")[2]
+            if this_type == prev_type:
+                stack.append(label)
+                # already taken care of in token_spans_to_tag_sequence
+                """else:
                     if encoding == "IOB2":
                         raise InvalidTagSequence(tag_sequence)
                     # a new entity
                     process_stack(stack, bioul_sequence)
-                    stack.append(label)
-        elif label[0] == "B":
-            if len(stack) > 0:
-                process_stack(stack, bioul_sequence)
+                    stack.append(label)"""
+        else:  # label[0] == "B":
+            # if there is start of new span before end of previous, this is handled in token_spans_to_tag_sequence
+            """if len(stack) > 0:
+
+            process_stack(stack, bioul_sequence)
+            """
             stack.append(label)
-        else:
-            raise InvalidTagSequence(tag_sequence)
+        # Already handled while fixing or removing the ill formed  encoding
+        """else:
+            raise InvalidTagSequence(tag_sequence)"""
 
     # process the stack
-    if len(stack) > 0:
-        process_stack(stack, bioul_sequence)
+    # if a span is still processing and the tag sequence ended, this is another case of ill formed tag sequence
+    """if len(stack) > 0:
+        process_stack(stack, bioul_sequence)"""
 
     return bioul_sequence
 
