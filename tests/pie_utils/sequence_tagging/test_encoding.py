@@ -3,6 +3,7 @@ import pytest
 from pie_utils.sequence_tagging.encoding import (
     bioul_to_boul,
     boul_to_bioul,
+    labeled_spans_to_iob2,
     tag_sequence_to_token_spans,
     token_spans_to_tag_sequence,
 )
@@ -130,6 +131,45 @@ def test_spans_to_tag_sequence(
             include_ill_formed=include_ill_formed,
         )
         assert tag_sequence == true_tag_sequences[encoding][1]
+
+
+@pytest.mark.parametrize(
+    "include_ill_formed",
+    [True, False],
+)
+def test_labeled_spans_to_iob2(special_tokens_masks, true_tag_sequences, include_ill_formed):
+    labeled_spans = [
+        # In this case if ill formed is included then we won't be able to fix it
+        [("person", (1, 3)), ("city", (2, 4))],
+        # In this case, if ill formed is included then we can still fix it
+        [("city", (1, 7)), ("person", (3, 5))],
+    ]
+    tags = []
+    for i, labeled_span in enumerate(labeled_spans):
+        base_sequence_length = len(special_tokens_masks[i])
+        tags.append(
+            labeled_spans_to_iob2(
+                labeled_spans=labeled_span,
+                base_sequence_length=base_sequence_length,
+                include_ill_formed=include_ill_formed,
+            )
+        )
+
+    if include_ill_formed:
+        assert tags[0] == ["O", "B-person", "B-city", "I-city", "O", "O", "O"]
+        assert tags[1] == [
+            "O",
+            "B-city",
+            "I-city",
+            "B-person",
+            "I-person",
+            "I-city",
+            "I-city",
+            "O",
+        ]
+    else:
+        assert tags[0] == ["O", "B-person", "I-person", "O", "O", "O", "O"]
+        assert tags[1] == ["O", "B-city", "I-city", "I-city", "I-city", "I-city", "I-city", "O"]
 
 
 @pytest.mark.parametrize(
