@@ -228,12 +228,11 @@ def to_bioul(tag_sequence: List[str], encoding: str = "IOB1") -> List[str]:
     return bioul_sequence
 
 
-def token_spans_to_tag_sequence(
+def labeled_spans_to_iob2(
     labeled_spans: List[TypedStringSpan],
     base_sequence_length: int,
-    coding_scheme: str = "IOB2",
     offset: int = 0,
-    include_ill_formed: bool = True,
+    include_ill_formed: bool = False,
 ) -> List[str]:
     # create IOB2 encoding
     tags = ["O"] * base_sequence_length
@@ -243,13 +242,32 @@ def token_spans_to_tag_sequence(
         _end = end - offset
 
         previous_tags = tags[_start:_end]
-        assert previous_tags == ["O"] * len(
-            previous_tags
-        ), f"tags already set [{previous_tags}], i.e. there is an annotation overlap"
+        if previous_tags != ["O"] * len(previous_tags):
+            # raise ValueError(f"tags already set [{previous_tags}], i.e. there is an annotation overlap")
+            if not include_ill_formed:
+                continue
+
         # create IOB2 encoding
         tags[_start] = f"B-{label}"
         tags[_start + 1 : _end] = [f"I-{label}"] * (len(previous_tags) - 1)
 
+    return tags
+
+
+def token_spans_to_tag_sequence(
+    labeled_spans: List[TypedStringSpan],
+    base_sequence_length: int,
+    coding_scheme: str = "IOB2",
+    offset: int = 0,
+    include_ill_formed: bool = True,
+) -> List[str]:
+
+    tags = labeled_spans_to_iob2(
+        labeled_spans=labeled_spans,
+        base_sequence_length=base_sequence_length,
+        offset=offset,
+        include_ill_formed=include_ill_formed,
+    )
     if include_ill_formed:
         tags = fix_encoding(tags, "IOB2")
     else:
