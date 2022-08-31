@@ -1,6 +1,13 @@
 from typing import List
 
-from pie_utils.sequence_tagging import InvalidTagSequence
+
+class InvalidTagSequence(Exception):
+    def __init__(self, tag_sequence=None):
+        super().__init__()
+        self.tag_sequence = tag_sequence
+
+    def __str__(self):
+        return " ".join(self.tag_sequence)
 
 
 def _update_previous_label(tag_sequence, current_tag_type):

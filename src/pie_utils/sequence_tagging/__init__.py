@@ -1,7 +1,11 @@
-class InvalidTagSequence(Exception):
-    def __init__(self, tag_sequence=None):
-        super().__init__()
-        self.tag_sequence = tag_sequence
+from pie_utils.sequence_tagging.convert_annotation import (
+    convert_span_annotations_to_tag_sequence,
+    convert_tag_sequence_to_span_annotations,
+)
+from pie_utils.sequence_tagging.ill_formed import InvalidTagSequence
 
-    def __str__(self):
-        return " ".join(self.tag_sequence)
+__all__ = [
+    "convert_span_annotations_to_tag_sequence",
+    "convert_tag_sequence_to_span_annotations",
+    "InvalidTagSequence",
+]
