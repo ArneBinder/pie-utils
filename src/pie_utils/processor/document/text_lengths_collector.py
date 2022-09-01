@@ -9,7 +9,7 @@ from transformers import AutoTokenizer
 
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithPartition
+from ..document import DocumentWithPartitions
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +80,9 @@ class TextLengthsCollector(WithStatistics):
 
         logger.info(f"{caption}):\n{json.dumps(stats, indent=2)}")
 
-    def __call__(self, document: DocumentWithPartition) -> DocumentWithPartition:
+    def __call__(self, document: DocumentWithPartitions) -> DocumentWithPartitions:
         partition = (
-            document.partition if self.use_partition else [Span(start=0, end=len(document.text))]
+            document.partitions if self.use_partition else [Span(start=0, end=len(document.text))]
         )
         tokenized = self.tokenizer(
             [document.text[part.start : part.end] for part in partition], **self.tokenizer_kwargs

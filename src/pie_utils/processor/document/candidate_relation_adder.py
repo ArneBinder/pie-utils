@@ -12,7 +12,7 @@ from pytorch_ie.utils.span import is_contained_in
 from pie_utils.span.slice import distance
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithEntitiesRelationsAndPartition
+from ..document import DocumentWithEntitiesRelationsAndPartitions
 
 logger = logging.getLogger(__name__)
 
@@ -123,12 +123,12 @@ class CandidateRelationAdder(WithStatistics):
 
     def __call__(
         self,
-        document: DocumentWithEntitiesRelationsAndPartition,
-    ) -> DocumentWithEntitiesRelationsAndPartition:
+        document: DocumentWithEntitiesRelationsAndPartitions,
+    ) -> DocumentWithEntitiesRelationsAndPartitions:
         available_relations = document.relations
         available_relation_mapping = {(rel.head, rel.tail): rel for rel in available_relations}
         if self.use_partition:
-            available_partitions = document.partition
+            available_partitions = document.partitions
         else:
             available_partitions = [Span(start=0, end=len(document.text))]
         entities = document.entities
