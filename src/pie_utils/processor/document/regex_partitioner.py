@@ -33,7 +33,7 @@ def _get_partitions_with_matcher(
 
     :param document: A Document that is to be partitioned
     :param matcher: A method that is used to find a pattern in the document text and return an iterator yielding the
-                    Match objects.
+                    Match objects, e.g. re.compile(PATTERN).finditer
     :param label_group_id: An integer value (default:None) to select the desired match group from the Match object. This match
                             group is then used to create a label for the partition.
     :param label_whitelist: An optional list of labels (default:None) which are allowed to form a partition if label_group_id
