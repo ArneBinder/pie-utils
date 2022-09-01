@@ -3,8 +3,7 @@ import copy
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 
-from pie_utils.processor.document import DocumentWithEntitiesAndRelations
-from pie_utils.processor.document.reversed_relation_adder import ReversedRelationAdder
+from pie_utils.document import DocumentWithEntitiesAndRelations, ReversedRelationAdder
 
 TEXT1 = "Lily is mother of Harry."
 TEXT2 = "Beth greets Emma."
