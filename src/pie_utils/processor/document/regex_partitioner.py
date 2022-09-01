@@ -28,8 +28,9 @@ def _get_partitions_with_matcher(
     search for a pattern in the document. If the pattern is found, it returns a Match object that
     contains matched groups. A partition is then created using a span in the matched groups. The
     span of a partition starts from the first match (inclusive) and ends at the next match
-    (exclusive) or at the end of the document. A partition is labeled either using the default_partition_label or using the list
-    of labels available in label_whitelist. It should be noted that none of the partitions overlap.
+    (exclusive) or at the end of the document. A partition is labeled either using the
+    default_partition_label or using the list of labels available in label_whitelist. It should be
+    noted that none of the partitions overlap.
 
     :param document: A Document that is to be partitioned
     :param matcher: A method that is used to find a pattern in the document text and return an iterator yielding the
