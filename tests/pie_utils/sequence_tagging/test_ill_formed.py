@@ -1,7 +1,7 @@
 import pytest
 
-from pie_utils.sequence_tagging import InvalidTagSequence
 from pie_utils.sequence_tagging.ill_formed import (
+    InvalidTagSequence,
     fix_bio,
     fix_bioul,
     fix_boul,

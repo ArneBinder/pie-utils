@@ -1,11 +1,13 @@
 import pytest
 
-from pie_utils.sequence_tagging.encoding import (
-    bioul_to_boul,
-    boul_to_bioul,
-    labeled_spans_to_iob2,
+from pie_utils.sequence_tagging import (
     tag_sequence_to_token_spans,
     token_spans_to_tag_sequence,
+)
+from pie_utils.sequence_tagging.encoding import (
+    _bioul_to_boul,
+    _boul_to_bioul,
+    labeled_spans_to_iob2,
 )
 
 BIOUL_ENCODING_NAME = "BIOUL"
@@ -315,7 +317,7 @@ def test_bioul_to_boul():
         "O",
         "O",
     ]
-    new_tag_sequence = bioul_to_boul(bioul_sequence)
+    new_tag_sequence = _bioul_to_boul(bioul_sequence)
     assert new_tag_sequence == boul_sequence
 
 
@@ -342,7 +344,7 @@ def test_boul_to_bioul():
         "O",
         "O",
     ]
-    new_tag_sequence = boul_to_bioul(boul_sequence)
+    new_tag_sequence = _boul_to_bioul(boul_sequence)
     assert new_tag_sequence == bioul_sequence
 
     boul_sequence = [
@@ -356,5 +358,5 @@ def test_boul_to_bioul():
         "O",
         "O",
     ]
-    new_tag_sequence = boul_to_bioul(boul_sequence)
+    new_tag_sequence = _boul_to_bioul(boul_sequence)
     assert new_tag_sequence == bioul_sequence
