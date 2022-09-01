@@ -107,7 +107,7 @@ def bioul_tags_to_spans(
     return [span for span in spans if span[0] not in classes_to_ignore]
 
 
-def to_bioul(tag_sequence: List[str], encoding: str = "IOB1") -> List[str]:
+def _to_bioul(tag_sequence: List[str], encoding: str = "IOB1") -> List[str]:
     """Given a tag sequence encoded with IOB1 labels, recode to BIOUL.
 
     In the IOB1 scheme, I is a token inside a span, O is a token outside
@@ -275,9 +275,9 @@ def token_spans_to_tag_sequence(
 
     # Recode the labels if necessary.
     if coding_scheme == "BIOUL":
-        coded_tags = to_bioul(tags, encoding="IOB2") if tags is not None else None
+        coded_tags = _to_bioul(tags, encoding="IOB2") if tags is not None else None
     elif coding_scheme == "BOUL":
-        coded_tags = to_boul(tags, encoding="IOB2") if tags is not None else None
+        coded_tags = _to_boul(tags, encoding="IOB2") if tags is not None else None
     elif coding_scheme == "IOB2":
         coded_tags = tags
     else:
@@ -319,16 +319,16 @@ def tag_sequence_to_token_spans(
     return labeled_spans
 
 
-def to_boul(tag_sequence: List[str], encoding: str = "IOB2") -> List[str]:
-    bioul_tags = to_bioul(tag_sequence=tag_sequence, encoding=encoding)
-    return bioul_to_boul(bioul_tags)
+def _to_boul(tag_sequence: List[str], encoding: str = "IOB2") -> List[str]:
+    bioul_tags = _to_bioul(tag_sequence=tag_sequence, encoding=encoding)
+    return _bioul_to_boul(bioul_tags)
 
 
-def bioul_to_boul(bioul_tags: List[str]) -> List[str]:
+def _bioul_to_boul(bioul_tags: List[str]) -> List[str]:
     return ["O" if tag.startswith("I-") else tag for tag in bioul_tags]
 
 
-def boul_to_bioul(tag_sequence: List[str]) -> List[str]:
+def _boul_to_bioul(tag_sequence: List[str]) -> List[str]:
     bioul_tags = []
     index = 0
     while index < len(tag_sequence):
@@ -356,7 +356,7 @@ def boul_tags_to_spans(
     tag_sequence: List[str],
     classes_to_ignore: List[str] = None,
 ):
-    bioul_tags = boul_to_bioul(tag_sequence=tag_sequence)
+    bioul_tags = _boul_to_bioul(tag_sequence=tag_sequence)
     return bioul_tags_to_spans(
         tag_sequence=bioul_tags,
         classes_to_ignore=classes_to_ignore,
