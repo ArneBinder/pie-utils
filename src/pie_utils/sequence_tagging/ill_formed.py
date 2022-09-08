@@ -266,7 +266,7 @@ def fix_boul(
     return new_tag_sequence
 
 
-def fix_bio(tag_sequence: List[str]):
+def fix_iob2(tag_sequence: List[str]) -> List[str]:
     """Given a sequence corresponding to BIO tags, extracts spans. Spans are inclusive and can be
     of zero length, representing a single word span. Ill-formed spans are also included (i.e those
     which do not start with a "B-LABEL"), as otherwise it is possible to get a perfect precision
@@ -302,15 +302,6 @@ def fix_bio(tag_sequence: List[str]):
             if label[0] == "B":
                 # when there is B after B, we process again from second B
                 continue
-                """if label.partition("-")[2] != current_tag_type:
-                    # if Ba Bb
-                    index -= 1
-                    continue
-                else:
-                    # Ba Ba to Ba Ia
-                    new_tag_sequence.append(f'I-{current_tag_type}')
-                    index += 1
-                    label = tag_sequence[index]"""
             while label[0] == "I" and index < len(tag_sequence):
                 if label.partition("-")[2] != current_tag_type:
                     # Ba Ia Ib to Ba Ia Bb
@@ -383,7 +374,7 @@ def remove_boul(
 ) -> List[str]:
     """removes ill formed tag sequence from given sequence.
 
-    Note: if a span do not starts with B, but encounters a U then it is not removed
+    Note: if a span do not start with B, but encounters a U then it is not removed
     e.g: BOLOOUL converts to BILOOUO but
          BILBUL converts to BILOOO
     """
@@ -418,7 +409,7 @@ def remove_boul(
     return tag_sequence
 
 
-def remove_bio(
+def remove_iob2(
     tag_sequence: List[str],
 ) -> List[str]:
     index = 0
@@ -453,7 +444,7 @@ def remove_encoding(
     elif encoding == "BOUL":
         return remove_boul(tag_sequence)
     elif encoding == "IOB2":
-        return remove_bio(tag_sequence)
+        return remove_iob2(tag_sequence)
     else:
         raise ValueError(f"Unknown Coding scheme {encoding}.")
 
@@ -467,6 +458,6 @@ def fix_encoding(
     elif encoding == "BOUL":
         return fix_boul(tag_sequence)
     elif encoding == "IOB2":
-        return fix_bio(tag_sequence)
+        return fix_iob2(tag_sequence)
     else:
         raise ValueError(f"Unknown Coding scheme {encoding}.")
