@@ -9,7 +9,7 @@ from transformers import AutoTokenizer
 
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithPartitions
+from ..types import DocumentWithPartitions
 
 logger = logging.getLogger(__name__)
 

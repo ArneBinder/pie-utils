@@ -3,11 +3,8 @@ import re
 import pytest
 from pytorch_ie.annotations import LabeledSpan
 
-from pie_utils.processor.document import DocumentWithPartitions
-from pie_utils.processor.document.regex_partitioner import (
-    RegexPartitioner,
-    _get_partitions_with_matcher,
-)
+from pie_utils.document import DocumentWithPartitions, RegexPartitioner
+from pie_utils.document.processors.regex_partitioner import _get_partitions_with_matcher
 from pie_utils.span.slice import have_overlap
 
 

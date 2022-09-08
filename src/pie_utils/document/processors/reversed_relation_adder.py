@@ -8,7 +8,7 @@ from pytorch_ie.annotations import BinaryRelation
 
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithEntitiesAndRelations
+from ..types import DocumentWithEntitiesAndRelations
 
 logger = logging.getLogger(__name__)
 

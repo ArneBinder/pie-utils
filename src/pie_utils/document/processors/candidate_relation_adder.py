@@ -12,7 +12,7 @@ from pytorch_ie.utils.span import is_contained_in
 from pie_utils.span.slice import distance
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithEntitiesRelationsAndPartitions
+from ..types import DocumentWithEntitiesRelationsAndPartitions
 
 logger = logging.getLogger(__name__)
 

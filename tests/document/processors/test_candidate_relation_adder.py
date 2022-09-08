@@ -3,8 +3,10 @@ import copy
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 
-from pie_utils.processor.document import DocumentWithEntitiesRelationsAndPartitions
-from pie_utils.processor.document.candidate_relation_adder import CandidateRelationAdder
+from pie_utils.document import (
+    CandidateRelationAdder,
+    DocumentWithEntitiesRelationsAndPartitions,
+)
 
 TEXT1 = "Jane lives in Berlin. this is no sentence about Karl\n"
 TEXT2 = "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"

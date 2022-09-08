@@ -10,7 +10,7 @@ from pytorch_ie.annotations import LabeledSpan
 
 from pie_utils.statistics import WithStatistics
 
-from ..document import DocumentWithPartitions
+from ..types import DocumentWithPartitions
 
 logger = logging.getLogger(__name__)
 

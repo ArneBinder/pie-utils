@@ -1,7 +1,6 @@
 from pytorch_ie.annotations import Span
 
-from pie_utils.processor.document import DocumentWithPartitions
-from pie_utils.processor.document.text_lengths_collector import TextLengthsCollector
+from pie_utils.document import DocumentWithPartitions, TextLengthsCollector
 
 
 def test_text_lengths_collector():
