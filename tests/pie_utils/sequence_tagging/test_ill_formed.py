@@ -2,12 +2,12 @@ import pytest
 
 from pie_utils.sequence_tagging.ill_formed import (
     InvalidTagSequence,
-    fix_bio,
     fix_bioul,
     fix_boul,
-    remove_bio,
+    fix_iob2,
     remove_bioul,
     remove_boul,
+    remove_iob2,
 )
 
 BIOUL_ENCODING_NAME = "BIOUL"
@@ -372,7 +372,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-background_claim",
         "I-background_claim",
     ]
-    new_tag_sequence = fix_bio(bio_sequence)
+    new_tag_sequence = fix_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -385,7 +385,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-data",
         "B-background_claim",
     ]
-    new_tag_sequence = fix_bio(bio_sequence)
+    new_tag_sequence = fix_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -398,7 +398,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-data",
         "I-data",
     ]
-    new_tag_sequence = fix_bio(bio_sequence)
+    new_tag_sequence = fix_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = ["B-background_claim", "I-background_claim", "I-data", "O"]
@@ -408,7 +408,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "B-data",
         "O",
     ]
-    new_tag_sequence = fix_bio(bio_sequence)
+    new_tag_sequence = fix_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -421,7 +421,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "I-background_claim",
         "O",
     ]
-    new_tag_sequence = fix_bio(bio_sequence)
+    new_tag_sequence = fix_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -434,7 +434,7 @@ def test_fix_tag_sequence_with_ill_formed_bio_tag():
         "I-background_claim",
         "B-data",
     ]
-    new_tag_sequence = fix_bio(bio_sequence)
+    new_tag_sequence = fix_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
 
@@ -846,7 +846,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
     ]
 
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -861,7 +861,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -876,7 +876,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "I-data",
         "O",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -889,7 +889,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "B-background_claim",
         "I-background_claim",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -902,7 +902,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "B-data",
         "O",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -915,7 +915,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "B-data",
         "I-data",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = ["B-background_claim", "I-background_claim", "I-data", "O"]
@@ -925,7 +925,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
     bio_sequence = [
@@ -938,7 +938,7 @@ def test_remove_ill_formed__bio_tag_sequence():
         "O",
         "O",
     ]
-    new_tag_sequence = remove_bio(bio_sequence)
+    new_tag_sequence = remove_iob2(bio_sequence)
     assert new_tag_sequence == new_bio_sequence
 
 
@@ -949,7 +949,7 @@ def test_invalid_tag_sequence():
         "L-background_claim",
     ]
     with pytest.raises(InvalidTagSequence):
-        fix_bio(bio_sequence)
+        fix_iob2(bio_sequence)
 
     bioul_sequence = [
         "U-background_claim",

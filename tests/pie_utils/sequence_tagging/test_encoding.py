@@ -11,7 +11,7 @@ from pie_utils.sequence_tagging.encoding import (
 )
 
 BIOUL_ENCODING_NAME = "BIOUL"
-BIO_ENCODING_NAME = "IOB2"
+IOB2_ENCODING_NAME = "IOB2"
 BOUL_ENCODING_NAME = "BOUL"
 
 
@@ -68,7 +68,7 @@ def true_tag_sequences():
                 "O",
             ],
         ],
-        BIO_ENCODING_NAME: [
+        IOB2_ENCODING_NAME: [
             [
                 "O",
                 "B-person",
@@ -94,7 +94,7 @@ def true_tag_sequences():
 
 @pytest.mark.parametrize(
     "encoding",
-    [BIO_ENCODING_NAME, BIOUL_ENCODING_NAME, BOUL_ENCODING_NAME, None],
+    [IOB2_ENCODING_NAME, BIOUL_ENCODING_NAME, BOUL_ENCODING_NAME, None],
 )
 @pytest.mark.parametrize(
     "include_ill_formed",
@@ -176,7 +176,7 @@ def test_labeled_spans_to_iob2(special_tokens_masks, true_tag_sequences, include
 
 @pytest.mark.parametrize(
     "encoding",
-    [BIOUL_ENCODING_NAME, BIO_ENCODING_NAME, BOUL_ENCODING_NAME, None],
+    [BIOUL_ENCODING_NAME, IOB2_ENCODING_NAME, BOUL_ENCODING_NAME, None],
 )
 def test_tag_sequence_to_span(encoding, true_tag_sequences):
     sequence_to_span = {
@@ -217,7 +217,7 @@ def test_tag_sequence_to_span(encoding, true_tag_sequences):
                 ],
             ),
         ],
-        BIO_ENCODING_NAME: [
+        IOB2_ENCODING_NAME: [
             (["O", "B-city", "O", "B-city", "I-city"], [("city", (1, 1)), ("city", (3, 4))]),
             (["B-city", "I-city", "I-person", "I-person"], [("city", (0, 1)), ("person", (2, 3))]),
             (["B-city", "I-city", "I-city", "B-person"], [("city", (0, 2)), ("person", (3, 3))]),
@@ -239,7 +239,7 @@ def test_tag_sequence_to_span(encoding, true_tag_sequences):
 
 @pytest.mark.parametrize(
     "encoding",
-    [BIOUL_ENCODING_NAME, BIO_ENCODING_NAME, BOUL_ENCODING_NAME, None],
+    [BIOUL_ENCODING_NAME, IOB2_ENCODING_NAME, BOUL_ENCODING_NAME, None],
 )
 def test_tag_sequence_to_span_without_include_ill_formed(encoding, true_tag_sequences):
     sequence_to_span = {
@@ -274,7 +274,7 @@ def test_tag_sequence_to_span_without_include_ill_formed(encoding, true_tag_sequ
                 [("city", (0, 2)), ("city", (4, 4))],
             ),
         ],
-        BIO_ENCODING_NAME: [
+        IOB2_ENCODING_NAME: [
             (["O", "B-city", "O", "B-city", "I-city"], [("city", (1, 1)), ("city", (3, 4))]),
             (["B-city", "I-city", "I-person", "I-person"], [("city", (0, 1))]),
         ],
