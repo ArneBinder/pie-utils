@@ -120,7 +120,6 @@ def _to_boul(tag_sequence: List[str]) -> List[str]:
 def labeled_spans_to_iob2(
     labeled_spans: List[TypedStringSpan],
     base_sequence_length: int,
-    offset: int = 0,
     include_ill_formed: bool = False,
 ) -> List[str]:
     """This method converts a list of spans given as (label, (start_idx, end_idx)) to tag sequence
@@ -144,18 +143,16 @@ def labeled_spans_to_iob2(
     tags = ["O"] * base_sequence_length
     labeled_spans = sorted(labeled_spans, key=lambda span_annot: span_annot[1][0])
     for i, (label, (start, end)) in enumerate(labeled_spans):
-        _start = start - offset
-        _end = end - offset
 
-        previous_tags = tags[_start:_end]
+        previous_tags = tags[start:end]
         if previous_tags != ["O"] * len(previous_tags):
             # raise ValueError(f"tags already set [{previous_tags}], i.e. there is an annotation overlap")
             if not include_ill_formed:
                 continue
 
         # create IOB2 encoding
-        tags[_start] = f"B-{label}"
-        tags[_start + 1 : _end] = [f"I-{label}"] * (len(previous_tags) - 1)
+        tags[start] = f"B-{label}"
+        tags[start + 1 : end] = [f"I-{label}"] * (len(previous_tags) - 1)
 
     return tags
 
@@ -314,7 +311,6 @@ def token_spans_to_tag_sequence(
     labeled_spans: List[TypedStringSpan],
     base_sequence_length: int,
     coding_scheme: str = "IOB2",
-    offset: int = 0,
     include_ill_formed: bool = True,
 ) -> List[str]:
     """This method converts a list of spans given as (label, (start_idx, end_idx)) to a tag
@@ -328,7 +324,6 @@ def token_spans_to_tag_sequence(
         The length of base sequence
     coding_scheme: str, optional (default = "IOB2"),
         type of encoding scheme
-    offset ??
     include_ill_formed: bool, optional (default = True),
         The tag sequence might be ill formed, so based on value of this parameter, such sequence is either fixed
         (if True) or removed (if False)
@@ -340,7 +335,6 @@ def token_spans_to_tag_sequence(
     tags = labeled_spans_to_iob2(
         labeled_spans=labeled_spans,
         base_sequence_length=base_sequence_length,
-        offset=offset,
         include_ill_formed=include_ill_formed,
     )
     if include_ill_formed:
