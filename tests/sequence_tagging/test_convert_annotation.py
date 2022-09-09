@@ -279,7 +279,7 @@ def test_convert_span_annotations_to_tag_sequence(
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
     document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partition.append(SENTENCE1_TEXT1)
+    document.partitions.append(SENTENCE1_TEXT1)
 
     entities = document.entities
     assert len(entities) == 3
@@ -296,7 +296,7 @@ def test_convert_span_annotations_to_tag_sequence(
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
-    document.partition.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
+    document.partitions.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
 
     entities = document.entities
     assert len(entities) == 2
@@ -315,10 +315,10 @@ def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
-    document.partition.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
+    document.partitions.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
 
     entities = document.entities
-    partition = document.partition[0]
+    partition = document.partitions[0]
     stats = defaultdict(lambda: defaultdict(int))
     char_to_token_mapper = get_char_to_token_mapper(
         char_to_token_mapping=char_to_token_mappings[1],
