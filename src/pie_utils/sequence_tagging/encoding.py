@@ -11,26 +11,27 @@ TypedStringSpan = Tuple[str, Tuple[int, int]]
 
 
 def _to_bioul(tag_sequence: List[str]) -> List[str]:
-    """Given a tag sequence encoded with IOB1 labels, recode to BIOUL.
-
-    In the IOB1 scheme, I is a token inside a span, O is a token outside
-    a span and B is the beginning of span immediately following another
-    span of the same type.
+    """Given a tag sequence encoded with IOB2 labels, recode to BIOUL.
 
     In the BIO or IBO2 scheme, I is a token inside a span, O is a token outside
     a span and B is the beginning of a span.
 
+    In BIOUL scheme, I is a token inside a span, O is a token outside a span, B
+    is the beginning of a span, U represents a unit span and L is the end of a
+    span.
+
+    This method expects that tag sequence encoded with IOB2 scheme is free from
+    ill formed tag sequence.
+
     # Parameters
 
     tag_sequence : `List[str]`, required.
-        The tag sequence encoded in IOB1, e.g. ["I-PER", "I-PER", "O"].
-    encoding : `str`, optional, (default = `"IOB1"`).
-        The encoding type to convert from. Must be either "IOB1" or "IBO2".
+        The tag sequence encoded in IOB2, e.g. ["B-PER", "I-PER", "O"].
 
     # Returns
 
     bioul_sequence : `List[str]`
-        The tag sequence encoded in IOB1, e.g. ["B-PER", "L-PER", "O"].
+        The tag sequence encoded in BIOUL, e.g. ["B-PER", "L-PER", "O"].
     """
 
     def replace_label(full_label, new_label):
@@ -85,10 +86,33 @@ def _to_bioul(tag_sequence: List[str]) -> List[str]:
 
 
 def _bioul_to_boul(bioul_tags: List[str]) -> List[str]:
+    """Given a tag sequence encoded with BIOUL labels, recode to BOUL. It replaces every occurrence
+    of I-label with O. This method assumes that tag sequence is not ill formed.
+
+    # Parameters
+    tag_sequence : `List[str]`, required.
+        The tag sequence encoded in BIOUL, e.g. ["B-PER", "I-PER", "L-PER"].
+
+    # Returns
+    boul_sequence : `List[str]`
+        The tag sequence encoded in BOUL, e.g. ["B-PER", "O", "L-PER"].
+    """
     return ["O" if tag.startswith("I-") else tag for tag in bioul_tags]
 
 
 def _to_boul(tag_sequence: List[str]) -> List[str]:
+    """Given a tag sequence encoded with IOB2 labels, recode to BOUL. Tag sequence is first
+    converted to BIOUL scheme and then BIOUL is recoded to BOUL. This method assumes that tag
+    sequence is not ill formed.
+
+    # Parameters
+    tag_sequence : `List[str]`, required.
+        The tag sequence encoded in IOB2, e.g. ["B-PER", "I-PER", "I-PER"].
+
+    # Returns
+    boul_sequence : `List[str]`
+        The tag sequence encoded in BOUL, e.g. ["B-PER", "O", "L-PER"].
+    """
     bioul_tags = _to_bioul(tag_sequence=tag_sequence)
     return _bioul_to_boul(bioul_tags)
 
@@ -99,6 +123,23 @@ def labeled_spans_to_iob2(
     offset: int = 0,
     include_ill_formed: bool = False,
 ) -> List[str]:
+    """This method converts a list of spans given as (label, (start_idx, end_idx)) to tag sequence
+    with IOB2 encoding scheme.
+
+    # Parameters
+    labeled_spans : `List[TypedStringSpan]`, required.
+        A list of tuples containing spans and their label, e.g. [(person,(1,2)]
+    base_sequence_length: int, required.
+        The length of base sequence
+    offset ??
+    include_ill_formed: bool, optional (False by default)
+        IOB2 tag sequence created by spans might be ill formed. If this parameter is True then we keep such ill formed
+        sequence otherwise we exclude them from resulting tag sequence.
+
+    # Returns
+    tags : `List[str]`
+        The tag sequence encoded in IOB2, e.g. ["O", "B-PER", "I-PER"].
+    """
     # create IOB2 encoding
     tags = ["O"] * base_sequence_length
     labeled_spans = sorted(labeled_spans, key=lambda span_annot: span_annot[1][0])
@@ -120,6 +161,17 @@ def labeled_spans_to_iob2(
 
 
 def _boul_to_bioul(tag_sequence: List[str]) -> List[str]:
+    """Given a tag sequence encoded with BOUL labels, recode to BIOUL. This method assumes that tag
+    sequence is not ill formed.
+
+    # Parameters
+    tag_sequence : `List[str]`, required.
+        The tag sequence encoded in BOUL, e.g. ["B-PER", "O", "L-PER"].
+
+    # Returns
+    bioul_tags : `List[str]`
+        The tag sequence encoded in BIOUL, e.g. ["B-PER", "I-PER", "L-PER"].
+    """
     bioul_tags = []
     index = 0
     while index < len(tag_sequence):
@@ -154,12 +206,12 @@ def iob2_tags_to_spans(
     tag_sequence : `List[str]`, required.
         The integer class labels for a sequence.
     classes_to_ignore : `List[str]`, optional (default = `None`).
-        A list of string class labels `excluding` the bio tag
+        A list of string class labels `excluding` the IOB2 tag
         which should be ignored when extracting spans.
     # Returns
     spans : `List[TypedStringSpan]`
         The typed, extracted spans from the sequence, in the format (label, (span_start, span_end)).
-        Note that the label `does not` contain any BIO tag prefixes.
+        Note that the label `does not` contain any IOB2 tag prefixes.
     """
     spans = []
     classes_to_ignore = classes_to_ignore or []
@@ -197,20 +249,17 @@ def bioul_tags_to_spans(
     classes_to_ignore: List[str] = None,
 ) -> List[TypedStringSpan]:
     """Given a sequence corresponding to BIOUL tags, extracts spans. Spans are inclusive and can be
-    of zero length, representing a single word span. Ill-formed spans are not allowed and will
-    raise `InvalidTagSequence`. This function works properly when the spans are unlabeled (i.e.,
-    your labels are simply "B", "I", "O", "U", and "L").
+    of zero length, representing a single word span. This function works properly when the spans
+    are unlabeled (i.e., your labels are simply "B", "I", "O", "U", and "L").
 
     # Parameters
-
     tag_sequence : `List[str]`, required.
         The tag sequence encoded in BIOUL, e.g. ["B-PER", "L-PER", "O"].
     classes_to_ignore : `List[str]`, optional (default = `None`).
-        A list of string class labels `excluding` the bio tag
+        A list of string class labels `excluding` the IOB2 tag
         which should be ignored when extracting spans.
 
     # Returns
-
     spans : `List[TypedStringSpan]`
         The typed, extracted spans from the sequence, in the format (label, (span_start, span_end)).
     """
@@ -240,6 +289,20 @@ def boul_tags_to_spans(
     tag_sequence: List[str],
     classes_to_ignore: List[str] = None,
 ):
+    """Given a sequence corresponding to BOUL tags, extracts spans. It converts BOUL tags to BIOUL
+    tags and then BIOUL tags are converted to spans.
+
+    # Parameters
+    tag_sequence : `List[str]`, required.
+        The tag sequence encoded in BOUL, e.g. ["B-PER", "O", "L-PER"].
+    classes_to_ignore : `List[str]`, optional (default = `None`).
+        A list of string class labels `excluding` the IOB2 tag
+        which should be ignored when extracting spans.
+
+    # Returns
+    spans : `List[TypedStringSpan]`
+        The typed, extracted spans from the sequence, in the format (label, (span_start, span_end)).
+    """
     bioul_tags = _boul_to_bioul(tag_sequence=tag_sequence)
     return bioul_tags_to_spans(
         tag_sequence=bioul_tags,
@@ -254,7 +317,26 @@ def token_spans_to_tag_sequence(
     offset: int = 0,
     include_ill_formed: bool = True,
 ) -> List[str]:
+    """This method converts a list of spans given as (label, (start_idx, end_idx)) to a tag
+    sequence. First, spans are converted to IOB2 tag sequence and then ill formed sequence are
+    either fixed or removed. Finally, IOB2 tag sequence is recoded to the required coding scheme.
 
+    # Parameters
+    labeled_spans : `List[TypedStringSpan]`, required.
+        A list of tuples containing spans and their label, e.g. [(person,(1,2)]
+    base_sequence_length: int, required.
+        The length of base sequence
+    coding_scheme: str, optional (default = "IOB2"),
+        type of encoding scheme
+    offset ??
+    include_ill_formed: bool, optional (default = True),
+        The tag sequence might be ill formed, so based on value of this parameter, such sequence is either fixed
+        (if True) or removed (if False)
+
+    # Returns
+    tags : `List[str]`
+        The tag sequence encoded in IOB2, e.g. ["O", "B-PER", "I-PER"].
+    """
     tags = labeled_spans_to_iob2(
         labeled_spans=labeled_spans,
         base_sequence_length=base_sequence_length,
@@ -285,6 +367,25 @@ def tag_sequence_to_token_spans(
     classes_to_ignore: List[str] = None,
     include_ill_formed: bool = True,
 ):
+    """Given a sequence corresponding to a coding scheme (IOB2, BIOUL and BOUL), this method
+    converts it into token spans. It first fixes or remove ill formed tag sequence (if any) and
+    then convert tag sequence to the spans.
+
+    # Parameters
+       tag_sequence : `List[str]`, required.
+           The tag sequence encoded in IOB2, BIOUL or BOUL, e.g. ["B-PER", "O", "L-PER"].
+        coding_scheme: str, optional (default = "IOB2"),
+            type of encoding scheme
+        classes_to_ignore : `List[str]`, optional (default = `None`).
+           A list of string class labels `excluding` the IOB2 tag
+           which should be ignored when extracting spans.
+        include_ill_formed: bool, optional (default = True),
+            The tag sequence might be ill formed, so based on value of this parameter, such sequence is either fixed
+            (if True) or removed (if False)
+       # Returns
+       spans : `List[TypedStringSpan]`
+           The typed, extracted spans from the sequence, in the format (label, (span_start, span_end)).
+    """
 
     if include_ill_formed:
         new_tag_sequence = fix_encoding(tag_sequence, coding_scheme)

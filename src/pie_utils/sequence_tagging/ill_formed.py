@@ -412,6 +412,11 @@ def remove_boul(
 def remove_iob2(
     tag_sequence: List[str],
 ) -> List[str]:
+    """removes ill formed tag sequence from given sequence.
+
+    e.g: BaIaLa converts to BaIaO
+         BaIaBaBaIbBb converts to BaIaBaBaOBb
+    """
     index = 0
     while index < len(tag_sequence):
         label = tag_sequence[index]
@@ -435,29 +440,37 @@ def remove_iob2(
     return tag_sequence
 
 
-def remove_encoding(
-    tag_sequence: List[str],
-    encoding: str,
-) -> List[str]:
-    if encoding == "BIOUL":
-        return remove_bioul(tag_sequence)
-    elif encoding == "BOUL":
-        return remove_boul(tag_sequence)
-    elif encoding == "IOB2":
-        return remove_iob2(tag_sequence)
-    else:
-        raise ValueError(f"Unknown Coding scheme {encoding}.")
-
-
 def fix_encoding(
     tag_sequence: List[str],
     encoding: str,
 ) -> List[str]:
+    """Given a tag sequence with it's encoding scheme, ill formed sequence in fixed.
+
+    Encoding can only be IOB2, BIOUL or BOUL.
+    """
     if encoding == "BIOUL":
         return fix_bioul(tag_sequence)
     elif encoding == "BOUL":
         return fix_boul(tag_sequence)
     elif encoding == "IOB2":
         return fix_iob2(tag_sequence)
+    else:
+        raise ValueError(f"Unknown Coding scheme {encoding}.")
+
+
+def remove_encoding(
+    tag_sequence: List[str],
+    encoding: str,
+) -> List[str]:
+    """Given a tag sequence with it's encoding scheme, ill formed sequence in removed.
+
+    Encoding can only be IOB2, BIOUL or BOUL.
+    """
+    if encoding == "BIOUL":
+        return remove_bioul(tag_sequence)
+    elif encoding == "BOUL":
+        return remove_boul(tag_sequence)
+    elif encoding == "IOB2":
+        return remove_iob2(tag_sequence)
     else:
         raise ValueError(f"Unknown Coding scheme {encoding}.")
