@@ -276,7 +276,7 @@ def true_tag_sequences():
 def test_convert_span_annotations_to_tag_sequence(
     char_to_token_mappings, special_tokens_masks, true_tag_sequences
 ):
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT1)
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
     document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
     document.partition.append(SENTENCE1_TEXT1)
@@ -293,7 +293,7 @@ def test_convert_span_annotations_to_tag_sequence(
     )
     assert tag_sequence == true_tag_sequences[BIO_ENCODING_NAME][0]
 
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT2)
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
     document.partition.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
@@ -312,7 +312,7 @@ def test_convert_span_annotations_to_tag_sequence(
 
 
 def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings):
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT2)
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
     document.partition.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
@@ -333,7 +333,7 @@ def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings
 
 
 def test_span_annotations_to_labeled_spans_with_out_of_window_tokens(char_to_token_mappings):
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT2)
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.append(ENTITY_SEATTLE_TEXT2)
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
 
@@ -348,7 +348,7 @@ def test_span_annotations_to_labeled_spans_with_out_of_window_tokens(char_to_tok
 
 
 def test_span_annotations_to_labeled_spans_with_reversed_span_indices(char_to_token_mappings):
-    document = DocumentWithEntitiesRelationsAndPartition(text=TEXT1)
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
     document.entities.append(ENTITY_JANE_TEXT1)
 
     entities = document.entities
@@ -366,7 +366,7 @@ def test_span_annotations_to_labeled_spans_with_reversed_span_indices(char_to_to
 def test_span_annotations_to_labeled_spans_with_unaligned_spans(
     char_to_token_mappings, with_statistics
 ):
-    document = DocumentWithEntitiesRelationsAndPartition(text=" Jane lives in Berlin.\n")
+    document = DocumentWithEntitiesRelationsAndPartitions(text=" Jane lives in Berlin.\n")
     document.entities.append(LabeledSpan(start=0, end=5, label="person"))
 
     entities = document.entities
