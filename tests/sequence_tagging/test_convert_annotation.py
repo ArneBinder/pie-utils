@@ -4,7 +4,7 @@ import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 from pytorch_ie.utils.span import get_char_to_token_mapper
 
-from pie_utils.processor.document import DocumentWithEntitiesRelationsAndPartition
+from pie_utils.document.types import DocumentWithEntitiesRelationsAndPartitions
 from pie_utils.sequence_tagging.convert_annotation import (
     convert_span_annotations_to_tag_sequence,
     convert_tag_sequence_to_span_annotations,
