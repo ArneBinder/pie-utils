@@ -103,6 +103,10 @@ def true_tag_sequences():
 def test_spans_to_tag_sequence(
     encoding, special_tokens_masks, true_tag_sequences, include_ill_formed
 ):
+    """Given labeled spans are converted into tag sequence with a encoding scheme.
+
+    Encoding scheme can only be either IOB2, BIOUL or BOUL.
+    """
     labeled_spans = [
         [("person", (1, 2)), ("city", (3, 4)), ("person", (5, 6))],
         [("city", (1, 2)), ("person", (3, 7))],
@@ -140,6 +144,10 @@ def test_spans_to_tag_sequence(
     [True, False],
 )
 def test_labeled_spans_to_iob2(special_tokens_masks, true_tag_sequences, include_ill_formed):
+    """Given labeled spans are converted into tag sequence with IOB2 encoding scheme.
+
+    If ill_formed sequences are allowed then it is kept in tag sequence otherwise are ignored.
+    """
     labeled_spans = [
         # In this case if ill formed is included then we won't be able to fix it
         [("person", (1, 3)), ("city", (2, 4))],
@@ -179,6 +187,11 @@ def test_labeled_spans_to_iob2(special_tokens_masks, true_tag_sequences, include
     [BIOUL_ENCODING_NAME, IOB2_ENCODING_NAME, BOUL_ENCODING_NAME, None],
 )
 def test_tag_sequence_to_span(encoding, true_tag_sequences):
+    """Given tag sequence is converted into a span based on the type of encoding.
+
+    If encoding is not of type IOB2, BIOUL or BOUL, value error exception is generated. Ill formed
+    tag sequences are fixed.
+    """
     sequence_to_span = {
         BIOUL_ENCODING_NAME: [
             (
@@ -201,15 +214,15 @@ def test_tag_sequence_to_span(encoding, true_tag_sequences):
         ],
         BOUL_ENCODING_NAME: [
             (
-                ["O", "B-city", "O", "B-city", "U-city"],  # what is this O is actual O not I
+                ["O", "B-city", "O", "B-city", "U-city"],
                 [("city", (1, 4))],
             ),
-            (["B-city", "O", "O", "L-person"], [("city", (0, 2)), ("person", (3, 3))]),  # ERROR
+            (["B-city", "O", "O", "L-person"], [("city", (0, 2)), ("person", (3, 3))]),
             (
                 ["L-city", "O", "L-person"],
                 [("city", (0, 0)), ("person", (1, 2))],
             ),
-            (["B-city", "O", "O"], [("city", (0, 2))]),  # ERROR
+            (["B-city", "O", "O"], [("city", (0, 2))]),
             (
                 ["B-city", "O", "U-city"],
                 [
@@ -242,6 +255,11 @@ def test_tag_sequence_to_span(encoding, true_tag_sequences):
     [BIOUL_ENCODING_NAME, IOB2_ENCODING_NAME, BOUL_ENCODING_NAME, None],
 )
 def test_tag_sequence_to_span_without_include_ill_formed(encoding, true_tag_sequences):
+    """Given tag sequence is converted into a span based on the type of encoding.
+
+    If encoding is not of type IOB2, BIOUL or BOUL, value error exception is generated. Ill formed
+    tag sequence if any are removed.
+    """
     sequence_to_span = {
         BIOUL_ENCODING_NAME: [
             (
@@ -261,7 +279,7 @@ def test_tag_sequence_to_span_without_include_ill_formed(encoding, true_tag_sequ
         ],
         BOUL_ENCODING_NAME: [
             (
-                ["O", "B-city", "O", "L-city", "U-city"],  # what is this O is actual O not I
+                ["O", "B-city", "O", "L-city", "U-city"],
                 [("city", (1, 3)), ("city", (4, 4))],
             ),
             (["B-city", "O", "L-city", "L-person"], [("city", (0, 2))]),
@@ -295,6 +313,10 @@ def test_tag_sequence_to_span_without_include_ill_formed(encoding, true_tag_sequ
 
 
 def test_bioul_to_boul():
+    """Given BIOUL sequence is converted to BOUL sequence.
+
+    All 'I' tags between 'B' and 'L' tag of same label are converted to 'O' tag.
+    """
     bioul_sequence = [
         "O",
         "B-background_claim",
@@ -322,6 +344,10 @@ def test_bioul_to_boul():
 
 
 def test_boul_to_bioul():
+    """Given BOUL sequence is converted to BIOUL sequence.
+
+    All 'O' tags between 'B' and 'L' tag of same label are converted to 'I' tag of same label.
+    """
     boul_sequence = [
         "O",
         "B-background_claim",

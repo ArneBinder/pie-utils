@@ -10,7 +10,7 @@ TypedSpan = Tuple[int, Tuple[int, int]]
 TypedStringSpan = Tuple[str, Tuple[int, int]]
 
 
-def _to_bioul(tag_sequence: List[str]) -> List[str]:
+def _iob2_to_bioul(tag_sequence: List[str]) -> List[str]:
     """Given a tag sequence encoded with IOB2 labels, recode to BIOUL.
 
     In the BIO or IBO2 scheme, I is a token inside a span, O is a token outside
@@ -100,7 +100,7 @@ def _bioul_to_boul(bioul_tags: List[str]) -> List[str]:
     return ["O" if tag.startswith("I-") else tag for tag in bioul_tags]
 
 
-def _to_boul(tag_sequence: List[str]) -> List[str]:
+def _iob2_to_boul(tag_sequence: List[str]) -> List[str]:
     """Given a tag sequence encoded with IOB2 labels, recode to BOUL. Tag sequence is first
     converted to BIOUL scheme and then BIOUL is recoded to BOUL. This method assumes that tag
     sequence is not ill formed.
@@ -113,7 +113,7 @@ def _to_boul(tag_sequence: List[str]) -> List[str]:
     boul_sequence : `List[str]`
         The tag sequence encoded in BOUL, e.g. ["B-PER", "O", "L-PER"].
     """
-    bioul_tags = _to_bioul(tag_sequence=tag_sequence)
+    bioul_tags = _iob2_to_bioul(tag_sequence=tag_sequence)
     return _bioul_to_boul(bioul_tags)
 
 
@@ -130,7 +130,6 @@ def labeled_spans_to_iob2(
         A list of tuples containing spans and their label, e.g. [(person,(1,2)]
     base_sequence_length: int, required.
         The length of base sequence
-    offset ??
     include_ill_formed: bool, optional (False by default)
         IOB2 tag sequence created by spans might be ill formed. If this parameter is True then we keep such ill formed
         sequence otherwise we exclude them from resulting tag sequence.
@@ -246,8 +245,7 @@ def bioul_tags_to_spans(
     classes_to_ignore: List[str] = None,
 ) -> List[TypedStringSpan]:
     """Given a sequence corresponding to BIOUL tags, extracts spans. Spans are inclusive and can be
-    of zero length, representing a single word span. This function works properly when the spans
-    are unlabeled (i.e., your labels are simply "B", "I", "O", "U", and "L").
+    of zero length, representing a single word span.
 
     # Parameters
     tag_sequence : `List[str]`, required.
@@ -344,9 +342,9 @@ def token_spans_to_tag_sequence(
 
     # Recode the labels if necessary.
     if coding_scheme == "BIOUL":
-        coded_tags = _to_bioul(tags) if tags is not None else None
+        coded_tags = _iob2_to_bioul(tags) if tags is not None else None
     elif coding_scheme == "BOUL":
-        coded_tags = _to_boul(tags) if tags is not None else None
+        coded_tags = _iob2_to_boul(tags) if tags is not None else None
     elif coding_scheme == "IOB2":
         coded_tags = tags
     else:
