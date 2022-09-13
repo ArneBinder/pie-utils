@@ -24,6 +24,28 @@ def convert_tag_sequence_to_span_annotations(
     include_ill_formed: bool = True,
     classes_to_ignore: List[str] = None,
 ):
+    """Given a tag sequence corresponding to a coding scheme (IOB2, BIOUL and BOUL), this method
+    converts it into the labeled spans.
+
+    # Parameters
+        tag_sequence : `List[str]`, required.
+           The tag sequence encoded in IOB2, BIOUL or BOUL, e.g. ["B-PER", "O", "L-PER"].
+        token_offset_mapping: List[Tuple[int, int]], required.
+            List of tuples containing start and end indices at character level for each token in the tag sequence.
+        offset: int, required.
+            offset to adjust the spans. It is either start index of the partition containing the tag sequence or 0.
+        encoding: str, optional (default = "IOB2"),
+            type of encoding scheme
+        include_ill_formed: bool, optional (default = True),
+            The tag sequence might be ill formed, so based on value of this parameter, such sequence is either fixed
+            (if True) or removed (if False)
+        classes_to_ignore : `List[str]`, optional (default = `None`).
+           A list of string class labels `excluding` the IOB2 tag
+           which should be ignored when extracting spans.
+
+    # Returns
+       `List[LabeledSpan]`
+    """
     spans = tag_sequence_to_token_spans(
         tag_sequence=tag_sequence,
         coding_scheme=encoding,
@@ -46,6 +68,24 @@ def span_annotations_to_labeled_spans(
     partition: Optional[Span] = None,
     statistics: Optional[DefaultDict[str, Counter]] = None,
 ) -> List[Tuple[str, Tuple[int, int]]]:
+    """Given a list of span annotations, a character position to token mapper (as obtained from
+    batch_encoding.char_to_token), create a list of labeled spans.If a partition is provided, only
+    the tokens within that span are considered.
+
+    # Parameters
+        span_annotations : `BaseAnnotationList[LabeledSpan]`, required.
+            List of span annotations
+        char_to_token_mapper: `Callable[[int], Optional[int]]`, required.
+            A method that maps character indices to token indices.
+        partition: `Span`, optional (default = None)
+            A span representing the partition
+        statistics: `DefaultDict[str, Counter]`, optional (default = None)
+            A dictionary that collects statistics related to the labeled spans.
+            It collects the count of the span labels which are skipped due to alignment issues
+            and the spans labels which are added successfully.
+    # Returns
+       labeled_spans : `List[LabeledSpan]`
+    """
     offset = partition.start if partition is not None else 0
     labeled_spans = []
     for span_annotation in span_annotations:
@@ -95,8 +135,27 @@ def convert_span_annotations_to_tag_sequence(
     batch_encoding.char_to_token) and a special tokens mask, create a sequence of tags with the
     length of the special tokens mask.
 
-    If a partition is provided, only the tokens within that span are considered.
-    Note: The spans are not allowed to overlap (will raise an exception).
+    # Parameters
+        span_annotations : `BaseAnnotationList[LabeledSpan]`, required.
+            List of span annotations
+        base_sequence_length: int, required.
+            length of special token mask
+        char_to_token_mapper: `Callable[[int], Optional[int]]`, required.
+            A method that maps character indices to token indices.
+        partition: `Span`, optional (default = None)
+            A span representing the partition
+        statistics: `DefaultDict[str, Counter]`, optional (default = None)
+            A dictionary that collects statistics related to the labeled spans.
+            It collects the count of the span labels which are skipped due to alignment issues
+            and the spans labels which are added successfully.
+        include_ill_formed: bool, optional (default = True),
+            The tag sequence might be ill formed, so based on value of this parameter, such sequence is either fixed
+            (if True) or removed (if False)
+        encoding: str, optional (default = "IOB2"),
+            type of encoding scheme
+
+    # Returns
+       tag_sequence : `List[str]`
     """
 
     labeled_spans = span_annotations_to_labeled_spans(

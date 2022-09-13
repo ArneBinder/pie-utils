@@ -1,4 +1,4 @@
-from collections import Counter, defaultdict
+from collections import defaultdict
 
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
@@ -16,7 +16,7 @@ RELATION_ANNOTATION_NAME = "relations"
 SENTENCE_ANNOTATION_NAME = "sentences"
 
 BIOUL_ENCODING_NAME = "BIOUL"
-BIO_ENCODING_NAME = "IOB2"
+IOB2_ENCODING_NAME = "IOB2"
 BOUL_ENCODING_NAME = "BOUL"
 
 TEXT1 = "Jane lives in Berlin. this is no sentence about Karl\n"
@@ -232,7 +232,7 @@ def true_tag_sequences():
                 "O",
             ],
         ],
-        BIO_ENCODING_NAME: [
+        IOB2_ENCODING_NAME: [
             [
                 "O",
                 "B-person",
@@ -276,6 +276,8 @@ def true_tag_sequences():
 def test_convert_span_annotations_to_tag_sequence(
     char_to_token_mappings, special_tokens_masks, true_tag_sequences
 ):
+    # Document contains three entities, one relation and one partition. Entities will be converted into the tag sequences
+    # with the IOB2 encoding scheme.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
     document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
@@ -291,8 +293,10 @@ def test_convert_span_annotations_to_tag_sequence(
         base_sequence_length=len(special_tokens_masks[0]),
         char_to_token_mapper=char_to_token_mapper,
     )
-    assert tag_sequence == true_tag_sequences[BIO_ENCODING_NAME][0]
+    assert tag_sequence == true_tag_sequences[IOB2_ENCODING_NAME][0]
 
+    # Document contains two entities, one relation and two partition. Entities will be converted into the tag sequences
+    # with the IOB2 encoding scheme.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
@@ -308,10 +312,13 @@ def test_convert_span_annotations_to_tag_sequence(
         base_sequence_length=len(special_tokens_masks[1]),
         char_to_token_mapper=char_to_token_mapper,
     )
-    assert tag_sequence == true_tag_sequences[BIO_ENCODING_NAME][1]
+    assert tag_sequence == true_tag_sequences[IOB2_ENCODING_NAME][1]
 
 
 def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings):
+    # Document contains two entities, one relation and two partition. First partition is used to create the labeled
+    # spans. Only one entity will be converted into the labeled span since it is the only entity inside the first
+    # partition.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
@@ -333,6 +340,8 @@ def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings
 
 
 def test_span_annotations_to_labeled_spans_with_out_of_window_tokens(char_to_token_mappings):
+    # Indices of a span cannot be negative. Since the char_to_token_mapper always returns a negative value, it will
+    # result in a ValueError.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
     document.entities.append(ENTITY_SEATTLE_TEXT2)
     document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
@@ -348,6 +357,8 @@ def test_span_annotations_to_labeled_spans_with_out_of_window_tokens(char_to_tok
 
 
 def test_span_annotations_to_labeled_spans_with_reversed_span_indices(char_to_token_mappings):
+    # The start index of a span cannot be greater than the end index. char_to_token_mapper returns 1 for the start index
+    # and 0 for the end index, this results in a ValueError.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
     document.entities.append(ENTITY_JANE_TEXT1)
 
@@ -366,6 +377,9 @@ def test_span_annotations_to_labeled_spans_with_reversed_span_indices(char_to_to
 def test_span_annotations_to_labeled_spans_with_unaligned_spans(
     char_to_token_mappings, with_statistics
 ):
+    # Document contains an entity. However, the document starts with a whitespace which results in an unaligned span.
+    # Therefore, statistics collected for the method will contain one entity skipped due to incorrect alignment and no
+    # added entity.
     document = DocumentWithEntitiesRelationsAndPartitions(text=" Jane lives in Berlin.\n")
     document.entities.append(LabeledSpan(start=0, end=5, label="person"))
 
@@ -390,7 +404,7 @@ def test_span_annotations_to_labeled_spans_with_unaligned_spans(
 
 
 def test_convert_tag_sequence_to_span_annotations(true_tag_sequences):
-    # Incomplete
+    # Given tag sequence encoded with the IOB2 encoding scheme is converted into the spans.
     token_offset_mapping = [
         (0, 0),
         (0, 7),
@@ -410,7 +424,7 @@ def test_convert_tag_sequence_to_span_annotations(true_tag_sequences):
         (0, 0),
     ]
     spans = convert_tag_sequence_to_span_annotations(
-        true_tag_sequences[BIO_ENCODING_NAME][1],
+        true_tag_sequences[IOB2_ENCODING_NAME][1],
         token_offset_mapping=token_offset_mapping,
         offset=0,
     )
