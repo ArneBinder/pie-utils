@@ -999,7 +999,7 @@ def test_remove_iob2():
 
 
 def test_invalid_tag_sequence():
-    # Here we test if different fix encoding methods can detect and raise invalid tag sequence error.
+    # Here we test if the different fix encoding methods can detect and raise the invalid tag sequence error.
     iob2_sequence = [
         "B-background_claim",
         "I-background_claim",

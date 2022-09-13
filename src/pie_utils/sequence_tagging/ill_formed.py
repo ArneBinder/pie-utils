@@ -11,8 +11,8 @@ class InvalidTagSequence(Exception):
 
 
 def _update_previous_label(tag_sequence, current_tag_type):
-    """When current tag type in a span is different from the next span tag type, we convert using
-    following rule :
+    """When the current tag type in a span is different from the next span tag type, we convert
+    using the following rule :
 
     BIOUL: update Ba to Ua or Ia to La
     BOUL: update Ba to Ua or O to La
@@ -26,8 +26,8 @@ def _update_previous_label(tag_sequence, current_tag_type):
 
 def _process_B(tag_sequence, new_tag_sequence, label, index, process_tag):
     """Process a span starting with a B, it receives the given tag sequence, a new tag sequence
-    where fixed sequence is stored, current label, index and finally a method process_tag which can
-    be process_I in case of BIOUL and process_O in case of BOUL."""
+    where the fixed sequence is stored, current label, index and finally a method process_tag which
+    can be process_I in case of BIOUL and process_O in case of BOUL."""
     current_tag_type = label.partition("-")[2]
     index += 1
     if index < len(tag_sequence):
@@ -59,14 +59,14 @@ def _process_B(tag_sequence, new_tag_sequence, label, index, process_tag):
 def fix_bioul(
     tag_sequence: List[str],
 ) -> List[str]:
-    """In all the example shown in the method below we refer to BIOUL tags as tag and attached type
-    as tag type such as "Ba" means B as BIOUL tag and "a" as tag type.
+    """In all the example shown in the method below we refer to BIOUL tags as tag and the attached
+    type as tag type such as "Ba" means B as BIOUL tag and "a" as tag type.
 
     This method fix ill formed tag sequence by following some rules mentioned below:
     1. tag type takes precedence over tag that means if a sequence is Ba Ia Ua then it is converted to Ba Ia Ia
     2. individual occurrence of B or L in between other tag type is converted into U e.g: La Bb Ba to La Ub Ba
     3. encountering different tag type or O inside a span will end the span at last index
-    There might be subcases of above-mentioned rules which are described in in-line comments
+    There might be subcases of the above-mentioned rules which are described in in-line comments
     """
 
     def process_I(index, label, current_tag_type):
@@ -166,15 +166,15 @@ def fix_bioul(
 def fix_boul(
     tag_sequence: List[str],
 ) -> List[str]:
-    """In all the example shown in the method below we refer to BOUL tags as tag and attached type
-    as tag type such as "Ba" means B as BOUL tag and "a" as tag type.
+    """In all the example shown in the method below we refer to BOUL tags as tag and the attached
+    type as tag type such as "Ba" means B as BOUL tag and "a" as tag type.
 
     This method fix ill formed tag sequence by following some rules mentioned below:
     1. tag type takes precedence over tag that means if a sequence is Ba O Ua then it is converted to Ba O O, here
         O means that it is part of current span
     2. individual occurrence of B or L in between other tag type is converted into U e.g: La Bb Ba to La Ub Ba
     3. encountering different tag type inside a span will end the span at last index
-    There might be subcases of above-mentioned rules which are described in in-line comments
+    There might be subcases of the above-mentioned rules which are described in in-line comments
     """
 
     def process_O(index, label, current_tag_type):
@@ -267,24 +267,12 @@ def fix_boul(
 
 
 def fix_iob2(tag_sequence: List[str]) -> List[str]:
-    """Given a sequence corresponding to BIO tags, extracts spans. Spans are inclusive and can be
-    of zero length, representing a single word span. Ill-formed spans are also included (i.e those
-    which do not start with a "B-LABEL"), as otherwise it is possible to get a perfect precision
-    score whilst still predicting ill-formed spans in addition to the correct spans. This function
-    works properly when the spans are unlabeled (i.e., your labels are simply "B", "I", and "O").
+    """In all the example shown in the method below we refer to IOB2 tags as tag and the attached
+    type as tag type such as "Ba" means B as IOB2 tag and "a" as tag type.
 
-    # Parameters
-    tag_sequence : `List[str]`, required.
-        The integer class labels for a sequence.
-    classes_to_ignore : `List[str]`, optional (default = `None`).
-        A list of string class labels `excluding` the bio tag
-        which should be ignored when extracting spans.
-    include_ill_formed: `bool`, optional (default = `True`).
-        If this flag is enabled, include spans that do not start with "B". Otherwise, these are ignored.
-    # Returns
-    spans : `List[TypedStringSpan]`
-        The typed, extracted spans from the sequence, in the format (label, (span_start, span_end)).
-        Note that the label `does not` contain any BIO tag prefixes.
+    This method fix ill formed tag sequence by following some rules mentioned below:
+    1. tag type takes precedence over tag that means if a sequence is Ba Ia Ib then it is converted to Ba Ia Bb
+    2. If the span starts with I tag it will be converted to B e.g. if a sequence is Ia Bb Ib then it is converted to Ba Bb Ib
     """
 
     new_tag_sequence = []
@@ -332,7 +320,7 @@ def fix_iob2(tag_sequence: List[str]) -> List[str]:
 def remove_bioul(
     tag_sequence: List[str],
 ) -> List[str]:
-    """removes ill formed tag sequence from given sequence.
+    """removes the ill formed tag sequence from the given sequence.
 
     Note: if a span do not start with B, but encounters a U then it is not removed
     e.g: BILOIUL converts to BILOOUO but
@@ -372,7 +360,7 @@ def remove_bioul(
 def remove_boul(
     tag_sequence: List[str],
 ) -> List[str]:
-    """removes ill formed tag sequence from given sequence.
+    """removes the ill formed tag sequence from the given sequence.
 
     Note: if a span do not start with B, but encounters a U then it is not removed
     e.g: BOLOOUL converts to BILOOUO but
@@ -412,7 +400,7 @@ def remove_boul(
 def remove_iob2(
     tag_sequence: List[str],
 ) -> List[str]:
-    """removes ill formed tag sequence from given sequence.
+    """removes the ill formed tag sequence from the given sequence.
 
     e.g: BaIaLa converts to BaIaO
          BaIaBaBaIbBb converts to BaIaBaBaOBb
@@ -444,7 +432,7 @@ def fix_encoding(
     tag_sequence: List[str],
     encoding: str,
 ) -> List[str]:
-    """Given a tag sequence with it's encoding scheme, ill formed sequence in fixed.
+    """Given a tag sequence with it's encoding scheme, the ill formed sequence in fixed.
 
     Encoding can only be IOB2, BIOUL or BOUL.
     """
@@ -462,7 +450,7 @@ def remove_encoding(
     tag_sequence: List[str],
     encoding: str,
 ) -> List[str]:
-    """Given a tag sequence with it's encoding scheme, ill formed sequence in removed.
+    """Given a tag sequence with it's encoding scheme, the ill formed sequence in removed.
 
     Encoding can only be IOB2, BIOUL or BOUL.
     """
