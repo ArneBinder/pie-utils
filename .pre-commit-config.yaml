@@ -80,8 +80,9 @@ repos:
       - id: codespell
         args:
           - --skip=logs/**,data/**
-          # required for plotext.hist()
-          - --ignore-words-list=hist
+          # hist: required for plotext.hist()
+          # ba: denotes beginning of an encoding with label as 'a'. More details at src/pie_utils/sequence_tagging/ill_formed.py
+          - --ignore-words-list=hist,ba
 
   # python static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
