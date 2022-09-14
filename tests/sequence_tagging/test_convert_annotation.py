@@ -46,8 +46,8 @@ def char_to_token_mappings():
     # encodings = tokenizer(TEXTS, return_offsets_mapping=True)
     # result is slightly different from shown below as command below might create some None values
     # result = [{char_idx: encodings[i].char_to_token(char_idx) for char_idx in range(len(text))} for i, text in enumerate(TEXTS)]
-    return [
-        {
+    return {
+        TEXT1: {
             0: 1,
             1: 1,
             2: 1,
@@ -92,7 +92,7 @@ def char_to_token_mappings():
             50: 11,
             51: 11,
         },
-        {
+        TEXT2: {
             0: 1,
             1: 1,
             2: 1,
@@ -142,22 +142,22 @@ def char_to_token_mappings():
             56: 16,
             57: 17,
         },
-    ]
+    }
 
 
 @pytest.fixture
 def special_tokens_masks():
-    return [
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    ]
+    return {
+        TEXT1: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        TEXT2: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    }
 
 
 @pytest.fixture
 def true_tag_sequences():
     return {
-        BIOUL_ENCODING_NAME: [
-            [
+        BIOUL_ENCODING_NAME: {
+            TEXT1: [
                 "O",
                 "U-person",
                 "O",
@@ -172,7 +172,7 @@ def true_tag_sequences():
                 "U-person",
                 "O",
             ],
-            [
+            TEXT2: [
                 "O",
                 "U-city",
                 "O",
@@ -193,9 +193,9 @@ def true_tag_sequences():
                 "O",
                 "O",
             ],
-        ],
-        BOUL_ENCODING_NAME: [
-            [
+        },
+        BOUL_ENCODING_NAME: {
+            TEXT1: [
                 "O",
                 "U-person",
                 "O",
@@ -210,7 +210,7 @@ def true_tag_sequences():
                 "U-person",
                 "O",
             ],
-            [
+            TEXT2: [
                 "O",
                 "U-city",
                 "O",
@@ -231,9 +231,9 @@ def true_tag_sequences():
                 "O",
                 "O",
             ],
-        ],
-        IOB2_ENCODING_NAME: [
-            [
+        },
+        IOB2_ENCODING_NAME: {
+            TEXT1: [
                 "O",
                 "B-person",
                 "O",
@@ -248,7 +248,7 @@ def true_tag_sequences():
                 "B-person",
                 "O",
             ],
-            [
+            TEXT2: [
                 "O",
                 "B-city",
                 "O",
@@ -269,7 +269,7 @@ def true_tag_sequences():
                 "O",
                 "O",
             ],
-        ],
+        },
     }
 
 
@@ -286,14 +286,14 @@ def test_convert_span_annotations_to_tag_sequence(
     entities = document.entities
     assert len(entities) == 3
     char_to_token_mapper = get_char_to_token_mapper(
-        char_to_token_mapping=char_to_token_mappings[0],
+        char_to_token_mapping=char_to_token_mappings[TEXT1],
     )
     tag_sequence = convert_span_annotations_to_tag_sequence(
         span_annotations=entities,
-        base_sequence_length=len(special_tokens_masks[0]),
+        base_sequence_length=len(special_tokens_masks[TEXT1]),
         char_to_token_mapper=char_to_token_mapper,
     )
-    assert tag_sequence == true_tag_sequences[IOB2_ENCODING_NAME][0]
+    assert tag_sequence == true_tag_sequences[IOB2_ENCODING_NAME][TEXT1]
 
     # Document contains two entities, one relation and two partition. Entities will be converted into the tag sequences
     # with the IOB2 encoding scheme.
@@ -305,14 +305,14 @@ def test_convert_span_annotations_to_tag_sequence(
     entities = document.entities
     assert len(entities) == 2
     char_to_token_mapper = get_char_to_token_mapper(
-        char_to_token_mapping=char_to_token_mappings[1],
+        char_to_token_mapping=char_to_token_mappings[TEXT2],
     )
     tag_sequence = convert_span_annotations_to_tag_sequence(
         span_annotations=entities,
-        base_sequence_length=len(special_tokens_masks[1]),
+        base_sequence_length=len(special_tokens_masks[TEXT2]),
         char_to_token_mapper=char_to_token_mapper,
     )
-    assert tag_sequence == true_tag_sequences[IOB2_ENCODING_NAME][1]
+    assert tag_sequence == true_tag_sequences[IOB2_ENCODING_NAME][TEXT2]
 
 
 def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings):
@@ -328,7 +328,7 @@ def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings
     partition = document.partitions[0]
     stats = defaultdict(lambda: defaultdict(int))
     char_to_token_mapper = get_char_to_token_mapper(
-        char_to_token_mapping=char_to_token_mappings[1],
+        char_to_token_mapping=char_to_token_mappings[TEXT2],
     )
     labeled_spans = span_annotations_to_labeled_spans(
         span_annotations=entities,
@@ -339,7 +339,7 @@ def test_span_annotations_to_labeled_spans_with_partition(char_to_token_mappings
     assert labeled_spans == [("city", (1, 2))]
 
 
-def test_span_annotations_to_labeled_spans_with_out_of_window_tokens(char_to_token_mappings):
+def test_span_annotations_to_labeled_spans_with_out_of_window_tokens():
     # Indices of a span cannot be negative. Since the char_to_token_mapper always returns a negative value, it will
     # result in a ValueError.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
@@ -356,7 +356,7 @@ def test_span_annotations_to_labeled_spans_with_out_of_window_tokens(char_to_tok
         )
 
 
-def test_span_annotations_to_labeled_spans_with_reversed_span_indices(char_to_token_mappings):
+def test_span_annotations_to_labeled_spans_with_reversed_span_indices():
     # The start index of a span cannot be greater than the end index. char_to_token_mapper returns 1 for the start index
     # and 0 for the end index, this results in a ValueError.
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
@@ -385,7 +385,7 @@ def test_span_annotations_to_labeled_spans_with_unaligned_spans(
 
     entities = document.entities
     char_to_token_mapper = get_char_to_token_mapper(
-        char_to_token_mapping=char_to_token_mappings[0],
+        char_to_token_mapping=char_to_token_mappings[TEXT1],
     )
     if with_statistics:
         stats = defaultdict(lambda: defaultdict(int))
@@ -424,7 +424,7 @@ def test_convert_tag_sequence_to_span_annotations(true_tag_sequences):
         (0, 0),
     ]
     spans = convert_tag_sequence_to_span_annotations(
-        true_tag_sequences[IOB2_ENCODING_NAME][1],
+        true_tag_sequences[IOB2_ENCODING_NAME][TEXT2],
         token_offset_mapping=token_offset_mapping,
         offset=0,
     )
