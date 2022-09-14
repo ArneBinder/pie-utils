@@ -2,7 +2,6 @@ import logging
 from typing import Callable, Counter, DefaultDict, Iterable, List, Optional, Tuple
 
 from pytorch_ie.annotations import LabeledSpan, Span
-from pytorch_ie.core.document import BaseAnnotationList
 
 from pie_utils.sequence_tagging.encoding import (
     tag_sequence_to_token_spans,
@@ -23,7 +22,7 @@ def convert_tag_sequence_to_span_annotations(
     encoding: str = "IOB2",
     include_ill_formed: bool = True,
     classes_to_ignore: List[str] = None,
-) -> Iterable[LabeledSpan]:
+) -> List[LabeledSpan]:
     """Given a tag sequence corresponding to a coding scheme (IOB2, BIOUL and BOUL), this method
     converts it into the labeled spans.
 
@@ -33,8 +32,8 @@ def convert_tag_sequence_to_span_annotations(
         token_offset_mapping: List[Tuple[int, int]], required.
             List of tuples containing start and end indices at character level for each token in the tag sequence.
         offset: int, optional.
-            character offset to adjust the spans when a partition is available. It is either the start index of the
-            partition containing the tag sequence or 0.
+            character offset to adjust the character spans when mapped from token level using token_offset_mapping.
+            For instance, offset can be the start index of the partition containing the tag sequence.
         encoding: str, optional (default = "IOB2"),
             type of encoding scheme
         include_ill_formed: bool, optional (default = True),
@@ -46,6 +45,7 @@ def convert_tag_sequence_to_span_annotations(
 
     # Returns
        `List[LabeledSpan]`
+            List of character level labeled span created from the tag sequence
     """
     spans = tag_sequence_to_token_spans(
         tag_sequence=tag_sequence,
@@ -85,7 +85,8 @@ def span_annotations_to_labeled_spans(
             It collects the count of the span labels which are skipped due to alignment issues
             and the spans labels which are added successfully.
     # Returns
-       labeled_spans : `List[LabeledSpan]`
+        `List[LabeledSpan]`
+            List of token level labeled span mapped from span_annotations using char_to_token_mapper
     """
     offset = partition.start if partition is not None else 0
     labeled_spans = []
@@ -156,7 +157,8 @@ def convert_span_annotations_to_tag_sequence(
             type of encoding scheme
 
     # Returns
-       tag_sequence : `List[str]`
+       `List[str]`
+            List of encoded string representing the tag sequence of length base_sequence_length
     """
 
     labeled_spans = span_annotations_to_labeled_spans(
