@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Counter, DefaultDict, List, Optional, Tuple
+from typing import Callable, Counter, DefaultDict, Iterable, List, Optional, Tuple
 
 from pytorch_ie.annotations import LabeledSpan, Span
 from pytorch_ie.core.document import BaseAnnotationList
@@ -19,11 +19,11 @@ TypedStringSpan = Tuple[str, Tuple[int, int]]
 def convert_tag_sequence_to_span_annotations(
     tag_sequence: List[str],
     token_offset_mapping: List[Tuple[int, int]],
-    offset: int,
+    offset: int = 0,
     encoding: str = "IOB2",
     include_ill_formed: bool = True,
     classes_to_ignore: List[str] = None,
-):
+) -> Iterable[LabeledSpan]:
     """Given a tag sequence corresponding to a coding scheme (IOB2, BIOUL and BOUL), this method
     converts it into the labeled spans.
 
@@ -32,8 +32,9 @@ def convert_tag_sequence_to_span_annotations(
            The tag sequence encoded in IOB2, BIOUL or BOUL, e.g. ["B-PER", "O", "L-PER"].
         token_offset_mapping: List[Tuple[int, int]], required.
             List of tuples containing start and end indices at character level for each token in the tag sequence.
-        offset: int, required.
-            offset to adjust the spans. It is either start index of the partition containing the tag sequence or 0.
+        offset: int, optional.
+            character offset to adjust the spans when a partition is available. It is either the start index of the
+            partition containing the tag sequence or 0.
         encoding: str, optional (default = "IOB2"),
             type of encoding scheme
         include_ill_formed: bool, optional (default = True),
@@ -63,17 +64,17 @@ def convert_tag_sequence_to_span_annotations(
 
 
 def span_annotations_to_labeled_spans(
-    span_annotations: BaseAnnotationList[LabeledSpan],
+    span_annotations: Iterable[LabeledSpan],
     char_to_token_mapper: Callable[[int], Optional[int]],
     partition: Optional[Span] = None,
     statistics: Optional[DefaultDict[str, Counter]] = None,
 ) -> List[Tuple[str, Tuple[int, int]]]:
     """Given a list of span annotations, a character position to token mapper (as obtained from
-    batch_encoding.char_to_token), create a list of labeled spans.If a partition is provided, only
+    batch_encoding.char_to_token), create a list of labeled spans. If a partition is provided, only
     the tokens within that span are considered.
 
     # Parameters
-        span_annotations : `BaseAnnotationList[LabeledSpan]`, required.
+        span_annotations : `Iterable[LabeledSpan]`, required.
             List of span annotations
         char_to_token_mapper: `Callable[[int], Optional[int]]`, required.
             A method that maps character indices to token indices.
@@ -123,7 +124,7 @@ def span_annotations_to_labeled_spans(
 
 
 def convert_span_annotations_to_tag_sequence(
-    span_annotations: BaseAnnotationList[LabeledSpan],
+    span_annotations: Iterable[LabeledSpan],
     base_sequence_length: int,
     char_to_token_mapper: Callable[[int], Optional[int]],
     partition: Optional[LabeledSpan] = None,
@@ -136,10 +137,10 @@ def convert_span_annotations_to_tag_sequence(
     length of the special tokens mask.
 
     # Parameters
-        span_annotations : `BaseAnnotationList[LabeledSpan]`, required.
+        span_annotations : `Iterable[LabeledSpan]`, required.
             List of span annotations
         base_sequence_length: int, required.
-            length of special token mask
+            length of the tag sequence created from the span annotations
         char_to_token_mapper: `Callable[[int], Optional[int]]`, required.
             A method that maps character indices to token indices.
         partition: `Span`, optional (default = None)
