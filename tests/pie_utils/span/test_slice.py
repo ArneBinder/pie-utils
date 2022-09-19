@@ -6,8 +6,29 @@ from pie_utils.span.slice import (
     distance_center,
     distance_inner,
     distance_outer,
+    get_overlap_len,
     is_contained_in,
 )
+
+
+def test_get_overlap_length():
+    # default case : when indices_2 follows the indices_1 and both have overlap
+    indices_1 = (0, 7)
+    indices_2 = (3, 9)
+    len = get_overlap_len(indices_1, indices_2)
+    assert len == 4
+
+    # when indices_1 follows the indices_2 and both have overlap
+    indices_1 = (3, 5)
+    indices_2 = (0, 4)
+    len = get_overlap_len(indices_1, indices_2)
+    assert len == 1
+
+    # when indices have no overlap
+    indices_1 = (0, 4)
+    indices_2 = (4, 9)
+    len = get_overlap_len(indices_1, indices_2)
+    assert len == 0
 
 
 def test_has_overlap():

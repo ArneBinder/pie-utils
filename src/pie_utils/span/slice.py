@@ -1,6 +1,16 @@
 from typing import Tuple
 
 
+def get_overlap_len(indices_1: Tuple[int, int], indices_2: Tuple[int, int]) -> int:
+    if indices_1[0] > indices_2[0]:
+        tmp = indices_1
+        indices_1 = indices_2
+        indices_2 = tmp
+    if indices_1[1] <= indices_2[0]:
+        return 0
+    return min(indices_1[1] - indices_2[0], indices_2[1] - indices_2[0])
+
+
 def have_overlap(start_end: Tuple[int, int], other_start_end: Tuple[int, int]) -> bool:
     other_start_overlaps = start_end[0] <= other_start_end[0] < start_end[1]
     other_end_overlaps = start_end[0] < other_start_end[1] <= start_end[1]
