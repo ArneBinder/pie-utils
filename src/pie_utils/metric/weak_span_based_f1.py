@@ -56,12 +56,12 @@ def get_weak_match(
 ) -> Optional[Tuple[str, Tuple[int, int]]]:
     """This method determines if the predicted span is weakly overlapped with any of the gold
     spans. If the predicted type and the gold type matches then we check if their respective
-    indices are weakly overlapped or not. If they are weakly overlapped then we return the matched
-    span. In addition to this, we use inclusive_end_index which adds an offset to the end index of
-    each span in the gold spans list and also to the predicted span. Once a match is found we
-    revert changes to the end index of the matched span. A span containing a single token might
-    have length of 0 since the start and the end index of a span would be same. That is why we add
-    an offset to the end index.
+    indices are weakly overlapped or not. If they weakly overlapped, we return the matched span. In
+    addition to this, we use inclusive_end_index which adds an offset to the end index of each span
+    in the gold spans list and also to the predicted span. Once a match is found we revert changes
+    to the end index of the matched span. A span containing a single token might have length of 0
+    since the start and the end index of a span would be same. That is why we add an offset to the
+    end index.
 
     # Parameters
 
@@ -112,10 +112,13 @@ def get_span_classes(label_vocabulary: Dict[int, str]):
 
 
 class SpanBasedF1WeakMeasure(Metric):
-    """The SpanBasedF1WeakMeasure computes the F1 score based on the span overlap. It creates four
-    states: true positive (tp), false positive (fp), false negative (fn) and true negative (tn).
-    These states are updated iteratively for the different span sequences which is ultimately used
-    to calculate the required F1 score.
+    """The SpanBasedF1WeakMeasure implements span-based precision, recall and F1 measure for
+    different tagging schemes. A span can either have exact match (strict) or it can be partially
+    overlapped (weak) with predicted span. This metric allows both strict and weak version. It
+    creates four states: true positive (tp), false positive (fp), false negative (fn) and true
+    negative (tn). These states are updated iteratively for the different sequences which is
+    ultimately used to calculate the desired metric. It produces precision, recall and F1 measures
+    per tag, as well as overall statistics.
 
     # Parameters
 
@@ -193,27 +196,30 @@ class SpanBasedF1WeakMeasure(Metric):
         # Parameters
 
         preds: `torch.Tensor` , required
-            This is the output predicted by the classification model in the shape B x T X C
-            where B represents batch size, T represents number of tokens and C represents
-            number of classes.
+            This is the output predicted by the classification model in the shape
+            (batch_size, sequence_length, num_classes)
         targets: `torch.Tensor` , required
-            This is the gold values for the given sequence in the shape B x T.
+            This is the gold values for the given sequence in the shape (batch_size, sequence_length).
         masks: `torch.BoolTensor` , optional (default = None)
             This tensor is used to masks the padded tokens in the given sequence. If it is None,
             then it is calculated using the targets.
         prediction_map: `torch.BoolTensor` , optional (default = None)
-            ???
+            A tensor of size (batch_size, num_classes) which provides a mapping from the index of predictions
+            to the indices of the label vocabulary. If provided, the output label at each timestep will be
+            `vocabulary.get_index_to_token_vocabulary(prediction_map[batch, argmax(predictions[batch, t]))`,
+            rather than simply `vocabulary.get_index_to_token_vocabulary(argmax(predictions[batch, t]))`.
+            This is useful in cases where each Instance in the dataset is associated with a different possible
+            subset of labels from a large label-space (IE FrameNet, where each frame has a different set of
+            possible roles associated with it).
         """
         if masks is None:
             # masks = torch.ones_like(targets).bool() This will result in a tensor with all values True.
             # It will result in error since targets contain -100 as value which has no label.
             masks = targets != -100
-        """
-           If you actually passed gradient-tracking Tensors to a Metric, there will be
-           a huge memory leak, because it will prevent garbage collection for the computation
-           graph. This method ensures the tensors are detached.
-           Check if it's actually a tensor in case something else was passed.
-        """
+
+        # If you actually passed gradient-tracking Tensors to a Metric, there will be a huge memory leak, because it
+        # will prevent garbage collection for the computation graph. This method ensures the tensors are detached. Check
+        # if it's actually a tensor in case something else was passed.
         predictions, gold_labels, mask, prediction_map = (
             x.detach() if isinstance(x, torch.Tensor) else x
             for x in (preds, targets, masks, prediction_map)
@@ -274,10 +280,10 @@ class SpanBasedF1WeakMeasure(Metric):
                 self.fn[self._span_classes_to_index[span[0]]] += 1
 
     def compute(self):
-        """Scores is a matrix of dimensions num_span_classes + 2 x 3. Here 3 signifies precision,
+        """Scores is a matrix of dimensions (num_span_classes + 2) x 3. Here 3 signifies precision,
         recall and f1 and 2 signifies micro and macro averaged metric scores.
 
-        # Returns     `torch.Tensor(float)`        value of the metric based on the return_metric
+        # Returns     `torch.Tensor(float)`         value of the metric based on the return_metric
         parameter
         """
 
