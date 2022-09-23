@@ -125,6 +125,62 @@ LOGITS = torch.tensor(
                 -2.556119441986084,
             ],
         ],
+        [
+            [
+                -2.7964279651641846,
+                -2.7935304641723633,
+                -2.4361226558685303,
+                -2.8135015964508057,
+                -1.101932406425476,
+                0.03466780483722687,
+                10.032923698425293,
+            ],
+            [
+                -2.841414451599121,
+                -2.925645351409912,
+                -2.197348117828369,
+                -3.377918004989624,
+                -1.2031382322311401,
+                -1.7914681434631348,
+                10.230854034423828,
+            ],
+            [
+                -2.645219087600708,
+                -3.736269235610962,
+                -2.1186366081237793,
+                -3.4355688095092773,
+                -0.8101659417152405,
+                -2.3279330730438232,
+                10.49844741821289,
+            ],
+            [
+                -2.3094680309295654,
+                -3.7092173099517822,
+                -1.942619800567627,
+                10.281001091003418,
+                -3.1347908973693848,
+                -1.1283811330795288,
+                -2.2268154621124268,
+            ],
+            [
+                -3.747760772705078,
+                -2.015471935272217,
+                -3.379420757293701,
+                -2.101996421813965,
+                10.566914558410645,
+                -3.555516242980957,
+                -2.556119441986084,
+            ],
+            [
+                -3.747760772705078,
+                -2.015471935272217,
+                -3.379420757293701,
+                -2.101996421813965,
+                10.566914558410645,
+                -3.555516242980957,
+                -2.556119441986084,
+            ],
+        ],
     ]
 )
 
@@ -146,6 +202,14 @@ TARGETS = torch.tensor(
             1,
             2,
             3,
+            -100,
+        ],
+        [
+            -100,
+            -100,
+            -100,
+            -100,
+            -100,
             -100,
         ],
     ]
@@ -187,6 +251,38 @@ def test_update(masks):
     assert torch.equal(metric.fp, torch.zeros([3], dtype=torch.int64))
     assert torch.equal(metric.fn, torch.zeros([3], dtype=torch.int64))
     metric.update(preds=torch.tensor(LOGITS), targets=torch.tensor(TARGETS), masks=masks)
+    expected_true_positives = torch.zeros([3], dtype=torch.int64)
+    expected_true_positives[metric._span_classes.index("own_claim")] = 1
+    expected_true_positives[metric._span_classes.index("data")] = 1
+    assert torch.equal(metric.tp, expected_true_positives)
+
+    expected_false_positives = torch.zeros([3], dtype=torch.int64)
+    expected_false_positives[metric._span_classes.index("own_claim")] = 1
+    assert torch.equal(metric.fp, expected_false_positives)
+
+    expected_false_negatives = torch.zeros([3], dtype=torch.int64)
+    expected_false_negatives[metric._span_classes.index("background_claim")] = 1
+    assert torch.equal(metric.fn, expected_false_negatives)
+
+
+def test_update_with_prediction_map():
+    """This test is similar to the last test but uses the prediction_map to obtain correct label in
+    each batch of sequence.
+
+    In our case, the label classes are same for all batch sequences. So prediction_map doesn't really make much
+    difference. Accurate use case can be found here:
+    https://github.com/allenai/allennlp/blob/39c40fe38cd2fd36b3465b0b3c031f54ec824160/tests/training/metrics/span_based_f1_measure_test.py#L39
+    """
+    prediction_map = torch.tensor(
+        [list(LABEL_TO_ID.values()), list(LABEL_TO_ID.values()), list(LABEL_TO_ID.values())]
+    )
+    metric = SpanBasedF1WeakMeasure(label_to_id=LABEL_TO_ID, return_metric="micro/f1")
+    assert torch.equal(metric.tp, torch.zeros([3], dtype=torch.int64))
+    assert torch.equal(metric.fp, torch.zeros([3], dtype=torch.int64))
+    assert torch.equal(metric.fn, torch.zeros([3], dtype=torch.int64))
+    metric.update(
+        preds=torch.tensor(LOGITS), targets=torch.tensor(TARGETS), prediction_map=prediction_map
+    )
     expected_true_positives = torch.zeros([3], dtype=torch.int64)
     expected_true_positives[metric._span_classes.index("own_claim")] = 1
     expected_true_positives[metric._span_classes.index("data")] = 1

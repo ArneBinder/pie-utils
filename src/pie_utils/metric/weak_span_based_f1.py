@@ -224,7 +224,8 @@ class SpanBasedF1WeakMeasure(Metric):
 
         if prediction_map is not None:
             argmax_predictions = torch.gather(prediction_map, 1, argmax_predictions)
-            gold_labels = torch.gather(prediction_map, 1, gold_labels.long())
+            # gold labels contain padding token which is -100 and there is no prediction mapping for padding token.
+            # gold_labels = torch.gather(prediction_map, 1, gold_labels.long())
 
         argmax_predictions = argmax_predictions.float()
 
