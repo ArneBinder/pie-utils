@@ -21,7 +21,7 @@ def convert_tag_sequence_to_span_annotations(
     offset: int = 0,
     encoding: str = "IOB2",
     include_ill_formed: bool = True,
-    classes_to_ignore: List[str] = None,
+    classes_to_ignore: Optional[List[str]] = None,
 ) -> List[LabeledSpan]:
     """Given a tag sequence corresponding to a coding scheme (IOB2, BIOUL and BOUL), this method
     converts it into the labeled spans.

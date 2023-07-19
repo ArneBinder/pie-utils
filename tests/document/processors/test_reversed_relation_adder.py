@@ -37,7 +37,6 @@ REL_JOHN_MEETS_S_JAMIE = BinaryRelation(
 
 
 def test_reversed_relation():
-
     reverse_relation_adder = ReversedRelationAdder(
         symmetric_relation_labels=[],
     )

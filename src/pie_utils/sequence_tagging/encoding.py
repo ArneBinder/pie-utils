@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from pie_utils.sequence_tagging.ill_formed import fix_encoding, remove_encoding
 
@@ -142,7 +142,6 @@ def labeled_spans_to_iob2(
     tags = ["O"] * base_sequence_length
     labeled_spans = sorted(labeled_spans, key=lambda span_annot: span_annot[1][0])
     for i, (label, (start, end)) in enumerate(labeled_spans):
-
         previous_tags = tags[start:end]
         if previous_tags != ["O"] * len(previous_tags):
             # raise ValueError(f"tags already set [{previous_tags}], i.e. there is an annotation overlap")
@@ -193,7 +192,7 @@ def _boul_to_bioul(tag_sequence: List[str]) -> List[str]:
 
 def iob2_tags_to_spans(
     tag_sequence: List[str],
-    classes_to_ignore: List[str] = None,
+    classes_to_ignore: Optional[List[str]] = None,
 ) -> List[TypedStringSpan]:
     """Given a sequence corresponding to BIO or IOB2 tags, extracts spans. Spans are inclusive and
     can be of zero length, representing a single word span.
@@ -242,7 +241,7 @@ def iob2_tags_to_spans(
 
 def bioul_tags_to_spans(
     tag_sequence: List[str],
-    classes_to_ignore: List[str] = None,
+    classes_to_ignore: Optional[List[str]] = None,
 ) -> List[TypedStringSpan]:
     """Given a sequence corresponding to BIOUL tags, extracts spans. Spans are inclusive and can be
     of zero length, representing a single word span.
@@ -282,7 +281,7 @@ def bioul_tags_to_spans(
 
 def boul_tags_to_spans(
     tag_sequence: List[str],
-    classes_to_ignore: List[str] = None,
+    classes_to_ignore: Optional[List[str]] = None,
 ):
     """Given a sequence corresponding to BOUL tags, extracts spans. It converts BOUL tags to BIOUL
     tags and then BIOUL tags are converted to spans.
@@ -357,7 +356,7 @@ def token_spans_to_tag_sequence(
 def tag_sequence_to_token_spans(
     tag_sequence: List[str],
     coding_scheme: str = "IOB2",
-    classes_to_ignore: List[str] = None,
+    classes_to_ignore: Optional[List[str]] = None,
     include_ill_formed: bool = True,
 ):
     """Given a sequence corresponding to a coding scheme (IOB2, BIOUL and BOUL), this method
