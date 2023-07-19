@@ -18,11 +18,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - uses: ryan-rozario/pipreqs-action-cpy@master
+      #- uses: ryan-rozario/pipreqs-action-cpy@master
 
-      - name: Show requirements.txt
-        run: |
-          cat requirements.txt
+      #- name: Show requirements.txt
+      #  run: |
+      #    cat requirements.txt
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
@@ -35,9 +35,9 @@ jobs:
           pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
           pip install ".[dev]"
 
-      - name: remove requirements.txt
-        run: |
-          rm requirements.txt
+      #- name: remove requirements.txt
+      #  run: |
+      #    rm requirements.txt
 
       - name: Find modified files
         id: file_changes
