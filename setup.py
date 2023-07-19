@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 REQUIRED_PKGS = [
-    "pytorch-ie~=0.8",
+    "pytorch-ie==0.8.0",
 ]
 
 TESTS_REQUIRE = [
