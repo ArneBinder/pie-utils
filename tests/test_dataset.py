@@ -6,7 +6,7 @@ import datasets
 import pytest
 from pytorch_ie import Dataset
 from pytorch_ie.annotations import LabeledSpan
-from pytorch_ie.core import AnnotationList, Document, annotation_field
+from pytorch_ie.core import AnnotationList, annotation_field
 from pytorch_ie.documents import TextDocument
 
 from pie_utils.dataset import (
@@ -55,7 +55,10 @@ def test_create_train_test_split_already_exists(dataset):
 
 
 class DummyDocumentProcessor:
-    def __call__(self, document: Document) -> Document:
+    # Note: we can not add general typing such as "document: Document" here because dataset.map
+    #       tries to infer the type from the function result type and, in this case,
+    #       would set the document type to "Document" meaning to erase all fields of the documents.
+    def __call__(self, document):
         return document
 
 
@@ -72,7 +75,7 @@ class CopyAnnotationToPredictionsDocumentPreprocessor(WithStatistics):
         logger.info(f"number of copied entities: {self.num_copied}")
 
     def __call__(self, document: CoNLL2003Document) -> CoNLL2003Document:
-        entities = list(document.entities)
+        entities = [entity.copy() for entity in document.entities]
         document.entities.predictions.extend(entities)
         self.num_copied += len(entities)
         return document
