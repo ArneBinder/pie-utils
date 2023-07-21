@@ -10,13 +10,6 @@ class CompactHydraException(HydraException):
     ...
 
 
-class OverrideParseException(CompactHydraException):
-    def __init__(self, override: str, message: str) -> None:
-        super().__init__(message)
-        self.override = override
-        self.message = message
-
-
 class InstantiationException(CompactHydraException):
     ...
 
@@ -75,8 +68,8 @@ def _locate(path: str) -> Any:
     return obj
 
 
-def _resolve_target(
-    target: Union[str, type, Callable[..., Any]], full_key: str
+def resolve_target(
+    target: Union[str, type, Callable[..., Any]], full_key: str = ""
 ) -> Union[type, Callable[..., Any]]:
     """Resolve target string, type or callable into type or callable."""
     if isinstance(target, str):
