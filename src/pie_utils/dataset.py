@@ -47,6 +47,8 @@ def process_documents(
     """This method uses given document processors to update each document of the dataset and
     returns updated dataset.
 
+    IMPORTANT: Works only for document processors that do not change the document type.
+
     params:
     dataset: instance of Dataset to be processed
     document_processors : dictionary containing document processors which will be used to update documents in given
@@ -55,7 +57,7 @@ def process_documents(
     """
 
     # test coverage is not captured for functions passed to Dataset.map
-    def _process_document(doc: Document) -> Document:  # pragma: no cover
+    def _process_document(doc):  # pragma: no cover
         for p_name, p in document_processors.items():
             doc = p(doc)
         return doc

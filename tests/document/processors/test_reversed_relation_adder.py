@@ -37,14 +37,15 @@ REL_JOHN_MEETS_S_JAMIE = BinaryRelation(
 
 
 def test_reversed_relation():
-
     reverse_relation_adder = ReversedRelationAdder(
         symmetric_relation_labels=[],
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT3)
-    document.entities.extend([ENTITY_JAMIE_TEXT3, ENTITY_JOHN_TEXT3])
-    document.relations.append(REL_JAMIE_MEETS_JOHN)
+    jamie = ENTITY_JAMIE_TEXT3.copy()
+    john = ENTITY_JOHN_TEXT3.copy()
+    document.entities.extend([jamie, john])
+    document.relations.append(REL_JAMIE_MEETS_JOHN.copy(head=jamie, tail=john))
 
     original_document = copy.deepcopy(document)
     reverse_relation_adder(document)
@@ -57,8 +58,8 @@ def test_reversed_relation():
     assert len(original_relations) == 1
     assert str(relations[0]) == str(original_relations[0])
     relation = relations[1]
-    assert str(relation.head) == str(ENTITY_JOHN_TEXT3)
-    assert str(relation.tail) == str(ENTITY_JAMIE_TEXT3)
+    assert str(relation.head) == str(john)
+    assert str(relation.tail) == str(jamie)
     assert relation.label == "meets_reversed"
     statistics = {
         "added_relations": {"meets_reversed": 1},
@@ -77,14 +78,21 @@ def test_with_already_reversed_relations():
         symmetric_relation_labels=[],
     )
     document = DocumentWithEntitiesAndRelations(text=TEXT1)
-    document.entities.extend([ENTITY_LILY_TEXT1, ENTITY_HARRY_TEXT1])
-    document.relations.extend([REL_LILY_MOTHER_OF_HARRY, REL_HARRY_SON_OF_LILY])
+    lily = ENTITY_LILY_TEXT1.copy()
+    harry = ENTITY_HARRY_TEXT1.copy()
+    document.entities.extend([lily, harry])
+    document.relations.extend(
+        [
+            REL_LILY_MOTHER_OF_HARRY.copy(head=lily, tail=harry),
+            REL_HARRY_SON_OF_LILY.copy(head=harry, tail=lily),
+        ]
+    )
 
     with pytest.raises(LookupError) as e:
         reverse_relation_adder(document)
     assert (
         str(e.value) == f"Entity pair of new relation "
-        f"({BinaryRelation(label='mother_of_reversed', head=ENTITY_HARRY_TEXT1, tail=ENTITY_LILY_TEXT1)}) "
+        f"({BinaryRelation(label='mother_of_reversed', head=harry, tail=lily)}) "
         f"already belongs to a relation: {REL_HARRY_SON_OF_LILY}"
     )
 
@@ -96,8 +104,15 @@ def test_with_already_reversed_relations_allow():
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT1)
-    document.entities.extend([ENTITY_LILY_TEXT1, ENTITY_HARRY_TEXT1])
-    document.relations.extend([REL_LILY_MOTHER_OF_HARRY, REL_HARRY_SON_OF_LILY])
+    lily = ENTITY_LILY_TEXT1.copy()
+    harry = ENTITY_HARRY_TEXT1.copy()
+    document.entities.extend([lily, harry])
+    document.relations.extend(
+        [
+            REL_LILY_MOTHER_OF_HARRY.copy(head=lily, tail=harry),
+            REL_HARRY_SON_OF_LILY.copy(head=harry, tail=lily),
+        ]
+    )
 
     original_document = copy.deepcopy(document)
     reverse_relation_adder_with_allow_already_reversed_relations(document)
@@ -127,8 +142,10 @@ def test_symmetric_relation():
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT3)
-    document.entities.extend([ENTITY_JAMIE_TEXT3, ENTITY_JOHN_TEXT3])
-    document.relations.append(REL_JAMIE_MEETS_JOHN)
+    jamie = ENTITY_JAMIE_TEXT3.copy()
+    john = ENTITY_JOHN_TEXT3.copy()
+    document.entities.extend([jamie, john])
+    document.relations.append(REL_JAMIE_MEETS_JOHN.copy(head=jamie, tail=john))
 
     original_document = copy.deepcopy(document)
     reverse_relation_adder_with_sym_rel(document)
@@ -142,6 +159,6 @@ def test_symmetric_relation():
     assert len(original_relations) == 1
     assert str(relations[0]) == str(original_relations[0])
     relation = relations[1]
-    assert str(relation.head) == str(ENTITY_JOHN_TEXT3)
-    assert str(relation.tail) == str(ENTITY_JAMIE_TEXT3)
+    assert str(relation.head) == str(john)
+    assert str(relation.tail) == str(jamie)
     assert relation.label == "meets"

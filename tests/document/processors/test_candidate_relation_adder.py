@@ -8,40 +8,62 @@ from pie_utils.document import (
     DocumentWithEntitiesRelationsAndPartitions,
 )
 
-TEXT1 = "Jane lives in Berlin. this is no sentence about Karl\n"
-TEXT2 = "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
-TEXT3 = "Karl enjoys sunny days in Berlin."
 
-ENTITY_JANE_TEXT1 = LabeledSpan(start=0, end=4, label="person")
-ENTITY_BERLIN_TEXT1 = LabeledSpan(start=14, end=20, label="city")
-ENTITY_KARL_TEXT1 = LabeledSpan(start=48, end=52, label="person")
-SENTENCE1_TEXT1 = LabeledSpan(start=0, end=21, label="sentence")
-REL_JANE_LIVES_IN_BERLIN = BinaryRelation(
-    head=ENTITY_JANE_TEXT1, tail=ENTITY_BERLIN_TEXT1, label="lives_in"
-)
-
-ENTITY_SEATTLE_TEXT2 = LabeledSpan(start=0, end=7, label="city")
-ENTITY_JENNY_TEXT2 = LabeledSpan(start=25, end=37, label="person")
-SENTENCE1_TEXT2 = LabeledSpan(start=0, end=24, label="sentence")
-SENTENCE2_TEXT2 = LabeledSpan(start=25, end=58, label="sentence")
-REL_JENNY_MAYOR_OF_SEATTLE = BinaryRelation(
-    head=ENTITY_JENNY_TEXT2, tail=ENTITY_SEATTLE_TEXT2, label="mayor_of"
-)
-
-ENTITY_KARL_TEXT3 = LabeledSpan(start=0, end=4, label="person")
-ENTITY_BERLIN_TEXT3 = LabeledSpan(start=26, end=32, label="city")
-SENTENCE1_TEXT3 = LabeledSpan(start=0, end=33, label="sentence")
-
-
-def test_candidate_relation_adder():
-    candidate_relation_adder = CandidateRelationAdder(
-        label="no_relation",
-        collect_statistics=True,
+@pytest.fixture
+def document1():
+    TEXT1 = "Jane lives in Berlin. this is no sentence about Karl\n"
+    ENTITY_JANE_TEXT1 = LabeledSpan(start=0, end=4, label="person")
+    ENTITY_BERLIN_TEXT1 = LabeledSpan(start=14, end=20, label="city")
+    ENTITY_KARL_TEXT1 = LabeledSpan(start=48, end=52, label="person")
+    SENTENCE1_TEXT1 = LabeledSpan(start=0, end=21, label="sentence")
+    REL_JANE_LIVES_IN_BERLIN = BinaryRelation(
+        head=ENTITY_JANE_TEXT1, tail=ENTITY_BERLIN_TEXT1, label="lives_in"
     )
+
     document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
     document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
     document.relations.append(REL_JANE_LIVES_IN_BERLIN)
     document.partitions.append(SENTENCE1_TEXT1)
+    return document
+
+
+@pytest.fixture
+def document2():
+    TEXT2 = "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n"
+    ENTITY_SEATTLE_TEXT2 = LabeledSpan(start=0, end=7, label="city")
+    ENTITY_JENNY_TEXT2 = LabeledSpan(start=25, end=37, label="person")
+    SENTENCE1_TEXT2 = LabeledSpan(start=0, end=24, label="sentence")
+    SENTENCE2_TEXT2 = LabeledSpan(start=25, end=58, label="sentence")
+    REL_JENNY_MAYOR_OF_SEATTLE = BinaryRelation(
+        head=ENTITY_JENNY_TEXT2, tail=ENTITY_SEATTLE_TEXT2, label="mayor_of"
+    )
+
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
+    document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
+    document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
+    document.partitions.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
+    return document
+
+
+@pytest.fixture
+def document3():
+    TEXT3 = "Karl enjoys sunny days in Berlin."
+    ENTITY_KARL_TEXT3 = LabeledSpan(start=0, end=4, label="person")
+    ENTITY_BERLIN_TEXT3 = LabeledSpan(start=26, end=32, label="city")
+    SENTENCE1_TEXT3 = LabeledSpan(start=0, end=33, label="sentence")
+
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT3)
+    document.entities.extend([ENTITY_KARL_TEXT3, ENTITY_BERLIN_TEXT3])
+    document.partitions.append(SENTENCE1_TEXT3)
+    return document
+
+
+def test_candidate_relation_adder(document1):
+    candidate_relation_adder = CandidateRelationAdder(
+        label="no_relation",
+        collect_statistics=True,
+    )
+    document = document1
 
     original_document = copy.deepcopy(document)
     document = candidate_relation_adder(document)
@@ -58,38 +80,35 @@ def test_candidate_relation_adder():
     assert len(original_relations) == 1
     assert str(relations[0]) == str(original_relations[0])
     relation = relations[1]
-    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
-    assert str(relation.tail) == str(ENTITY_JANE_TEXT1)
+    assert str(relation.head) == "Berlin"
+    assert str(relation.tail) == "Jane"
     assert relation.label == "no_relation"
     relation = relations[2]
-    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
-    assert str(relation.tail) == str(ENTITY_KARL_TEXT1)
+    assert str(relation.head) == "Berlin"
+    assert str(relation.tail) == "Karl"
     assert relation.label == "no_relation"
     relation = relations[3]
-    assert str(relation.head) == str(ENTITY_KARL_TEXT1)
-    assert str(relation.tail) == str(ENTITY_BERLIN_TEXT1)
+    assert str(relation.head) == "Karl"
+    assert str(relation.tail) == "Berlin"
     assert relation.label == "no_relation"
     relation = relations[4]
-    assert str(relation.head) == str(ENTITY_JANE_TEXT1)
-    assert str(relation.tail) == str(ENTITY_KARL_TEXT1)
+    assert str(relation.head) == "Jane"
+    assert str(relation.tail) == "Karl"
     assert relation.label == "no_relation"
     relation = relations[5]
-    assert str(relation.head) == str(ENTITY_KARL_TEXT1)
-    assert str(relation.tail) == str(ENTITY_JANE_TEXT1)
+    assert str(relation.head) == "Karl"
+    assert str(relation.tail) == "Jane"
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_statistics():
+def test_candidate_relation_adder_with_statistics(document1):
     candidate_relation_adder_with_statistics = CandidateRelationAdder(
         label="no_relation",
         collect_statistics=True,
         max_distance=8,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
-    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
-    document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partitions.append(SENTENCE1_TEXT1)
+    document = document1
 
     document = candidate_relation_adder_with_statistics(document)
     assert len(document) == 3
@@ -115,16 +134,13 @@ def test_candidate_relation_adder_with_statistics():
         assert e.value == "type of given key str or value float is incorrect."
 
 
-def test_candidate_relation_adder_without_sort_by_distance():
+def test_candidate_relation_adder_without_sort_by_distance(document1):
     candidate_relation_adder_without_sort_by_distance = CandidateRelationAdder(
         label="no_relation",
         sort_by_distance=False,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
-    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
-    document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partitions.append(SENTENCE1_TEXT1)
+    document = document1
 
     original_document = copy.deepcopy(document)
     document = candidate_relation_adder_without_sort_by_distance(document)
@@ -152,16 +168,13 @@ def test_candidate_relation_adder_without_sort_by_distance():
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_no_relation_upper_bound():
+def test_candidate_relation_adder_with_no_relation_upper_bound(document1):
     candidate_relation_adder_with_no_relation_upper_bound = CandidateRelationAdder(
         label="no_relation",
         added_relations_upper_bound_factor=3,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
-    document.entities.extend([ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1])
-    document.relations.append(REL_JANE_LIVES_IN_BERLIN)
-    document.partitions.append(SENTENCE1_TEXT1)
+    document = document1
 
     original_document = copy.deepcopy(document)
     document = candidate_relation_adder_with_no_relation_upper_bound(document)
@@ -179,25 +192,22 @@ def test_candidate_relation_adder_with_no_relation_upper_bound():
     assert len(original_relations) == 1
     assert str(relations[0]) == str(original_relations[0])
     relation = relations[1]
-    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
-    assert str(relation.tail) == str(ENTITY_JANE_TEXT1)
+    assert str(relation.head) == "Berlin"
+    assert str(relation.tail) == "Jane"
     assert relation.label == "no_relation"
     relation = relations[2]
-    assert str(relation.head) == str(ENTITY_BERLIN_TEXT1)
-    assert str(relation.tail) == str(ENTITY_KARL_TEXT1)
+    assert str(relation.head) == "Berlin"
+    assert str(relation.tail) == "Karl"
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_partitions():
+def test_candidate_relation_adder_with_partitions(document2):
     candidate_relation_adder_with_partition = CandidateRelationAdder(
         label="no_relation",
         use_partition=True,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT2)
-    document.entities.extend([ENTITY_SEATTLE_TEXT2, ENTITY_JENNY_TEXT2])
-    document.relations.append(REL_JENNY_MAYOR_OF_SEATTLE)
-    document.partitions.extend([SENTENCE1_TEXT2, SENTENCE2_TEXT2])
+    document = document2
 
     original_document = copy.deepcopy(document)
     candidate_relation_adder_with_partition(document)
@@ -218,7 +228,7 @@ def test_candidate_relation_adder_with_partitions():
     assert len(partition) == 2
 
 
-def test_candidate_relation_adder_with_partitions_and_max_distance():
+def test_candidate_relation_adder_with_partitions_and_max_distance(document3):
     # Along with the partition, now we check if a new candidate relation meets max_distance condition or not. That means
     # the inner distance between arguments of a relation should be less than max_distance.
     candidate_relation_adder_with_partition_and_max_distance = CandidateRelationAdder(
@@ -227,9 +237,7 @@ def test_candidate_relation_adder_with_partitions_and_max_distance():
         max_distance=8,
     )
 
-    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT3)
-    document.entities.extend([ENTITY_KARL_TEXT3, ENTITY_BERLIN_TEXT3])
-    document.partitions.append(SENTENCE1_TEXT3)
+    document = document3
 
     original_document = copy.deepcopy(document)
     candidate_relation_adder_with_partition_and_max_distance(document)

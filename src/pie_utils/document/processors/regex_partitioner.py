@@ -33,21 +33,21 @@ def _get_partitions_with_matcher(
     noted that none of the partitions overlap.
 
     :param document: A Document that is to be partitioned
-    :param matcher: A method that is used to find a pattern in the document text and return an iterator yielding the
-                    Match objects, e.g. re.compile(PATTERN).finditer
-    :param label_group_id: An integer value (default:None) to select the desired match group from the Match object. This match
-                            group is then used to create a label for the partition.
-    :param label_whitelist: An optional list of labels (default:None) which are allowed to form a partition if label_group_id
-                            is not None. label_whitelist is the whitelist for the labels created using label_group_id.
-                            If label_whitelist is None, then all the labels created using label_group_id will form a
-                            partition.
-    :param skip_initial_partition: A boolean value (default:False) that prevents the initial partition to be saved in the
-                                document.
-    :param default_partition_label: A string value (default:partition) to be used as the default label for the parts if no
-                                    label_group_id for the match object is provided.
-    :param initial_partition_label: A string value (default:None) to be used as a label for the initial
-                                partition. This is only used when skip_initial_partition is False. If it is None then
-                                default_partition_label is used as initial_partition_label.
+    :param matcher: A method that is used to find a pattern in the document text and return an
+        iterator yielding the Match objects, e.g. re.compile(PATTERN).finditer
+    :param label_group_id: An integer value (default:None) to select the desired match group from
+        the Match object. This match group is then used to create a label for the partition.
+    :param label_whitelist: An optional list of labels (default:None) which are allowed to form a
+        partition if label_group_id is not None. label_whitelist is the whitelist for the labels
+        created using label_group_id. If label_whitelist is None, then all the labels created using
+        label_group_id will form a partition.
+    :param skip_initial_partition: A boolean value (default:False) that prevents the initial
+        partition to be saved in the document.
+    :param default_partition_label: A string value (default:partition) to be used as the default
+        label for the parts if no label_group_id for the match object is provided.
+    :param initial_partition_label: A string value (default:None) to be used as a label for the
+        initial partition. This is only used when skip_initial_partition is False. If it is None
+        then default_partition_label is used as initial_partition_label.
     """
     if initial_partition_label is None:
         initial_partition_label = default_partition_label

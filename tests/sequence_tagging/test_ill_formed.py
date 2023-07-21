@@ -385,7 +385,6 @@ def test_fix_bioul():
 
 
 def test_fix_iob2():
-
     iob2_sequence = [
         "B-background_claim",
         "B-background_claim",
@@ -652,7 +651,6 @@ def test_remove_bioul():
 
 
 def test_remove_boul():
-
     boul_sequence = [
         "B-data",
         "O",

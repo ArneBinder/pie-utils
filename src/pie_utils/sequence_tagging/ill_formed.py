@@ -320,7 +320,7 @@ def fix_iob2(tag_sequence: List[str]) -> List[str]:
 def remove_bioul(
     tag_sequence: List[str],
 ) -> List[str]:
-    """removes the ill formed tag sequence from the given sequence.
+    """Removes the ill formed tag sequence from the given sequence.
 
     Note: if a span do not start with B, but encounters a U then it is not removed
     e.g: BILOIUL converts to BILOOUO but
@@ -360,7 +360,7 @@ def remove_bioul(
 def remove_boul(
     tag_sequence: List[str],
 ) -> List[str]:
-    """removes the ill formed tag sequence from the given sequence.
+    """Removes the ill formed tag sequence from the given sequence.
 
     Note: if a span do not start with B, but encounters a U then it is not removed
     e.g: BOLOOUL converts to BILOOUO but
@@ -400,10 +400,9 @@ def remove_boul(
 def remove_iob2(
     tag_sequence: List[str],
 ) -> List[str]:
-    """removes the ill formed tag sequence from the given sequence.
+    """Removes the ill formed tag sequence from the given sequence.
 
-    e.g: BaIaLa converts to BaIaO
-         BaIaBaBaIbBb converts to BaIaBaBaOBb
+    e.g: BaIaLa converts to BaIaO      BaIaBaBaIbBb converts to BaIaBaBaOBb
     """
     index = 0
     while index < len(tag_sequence):
