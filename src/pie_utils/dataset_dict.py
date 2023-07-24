@@ -125,18 +125,21 @@ class DatasetDict(datasets.DatasetDict):
             if step is not None:
                 range_args = range_args + [step]
             kwargs["indices"] = range(*range_args)
-        pie_split = self[split]
+
         if "indices" in kwargs:
-            self[split] = Dataset.from_hf_dataset(
-                dataset=pie_split.select(**kwargs), document_type=self[split].document_type
+            result = type(self)(self)
+            pie_split = result[split]
+            result[split] = Dataset.from_hf_dataset(
+                dataset=pie_split.select(**kwargs), document_type=pie_split.document_type
             )
+            return result
         else:
             if len(kwargs) > 0:
                 logger.warning(
                     f"arguments for dataset.select() available, but they do not contain 'indices' which is required, "
                     f"so we do not call select. provided arguments: \n{json.dumps(kwargs, indent=2)}"
                 )
-        return self
+            return self
 
     def rename_splits(
         self,

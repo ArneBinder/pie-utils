@@ -147,3 +147,32 @@ def test_map_with_result_document_type(dataset_dict):
             assert isinstance(doc1, TextDocument)
             assert isinstance(doc2, DocumentWithEntitiesAndRelations)
             assert doc1.text == doc2.text
+
+
+def test_select(dataset_dict):
+    # select documents by index
+    dataset_dict_selected = dataset_dict.select(
+        split="train",
+        indices=[0, 2],
+    )
+    assert len(dataset_dict_selected["train"]) == 2
+    assert dataset_dict_selected["train"][0] == dataset_dict["train"][0]
+    assert dataset_dict_selected["train"][1] == dataset_dict["train"][2]
+
+    # select documents by range
+    dataset_dict_selected = dataset_dict.select(
+        split="train",
+        stop=2,
+        start=1,
+        step=1,
+    )
+    assert len(dataset_dict_selected["train"]) == 1
+    assert dataset_dict_selected["train"][0] == dataset_dict["train"][1]
+
+    # calling with no arguments that do result in the creation of indices should return the same dataset,
+    # but will log a warning if other arguments (here "any_arg") are passed
+    dataset_dict_selected = dataset_dict.select(split="train", any_arg="ignored")
+    assert len(dataset_dict_selected["train"]) == len(dataset_dict["train"])
+    assert dataset_dict_selected["train"][0] == dataset_dict["train"][0]
+    assert dataset_dict_selected["train"][1] == dataset_dict["train"][1]
+    assert dataset_dict_selected["train"][2] == dataset_dict["train"][2]
