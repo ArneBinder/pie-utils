@@ -4,11 +4,13 @@ from pathlib import Path
 
 import datasets
 import pytest
+from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import LabeledSpan
 from pytorch_ie.core import AnnotationList, annotation_field
 from pytorch_ie.documents import TextDocument
 
 from pie_utils import DatasetDict
+from pie_utils.dataset_dict import get_pie_dataset_type
 from tests import FIXTURES_ROOT
 
 logger = logging.getLogger(__name__)
@@ -86,3 +88,14 @@ def test_document_type_different_types(dataset_dict):
         assert str(excinfo.value).startswith(
             "dataset contains splits with different document types:"
         )
+
+
+@pytest.fixture(scope="module")
+def iterable_dataset_dict():
+    return DatasetDict.from_json(
+        data_dir=DATA_PATH, document_type=DocumentWithEntitiesAndRelations, streaming=True,
+    )
+
+
+def test_iterable_dataset_dict(iterable_dataset_dict):
+    assert set(iterable_dataset_dict) == {"train", "test", "validation"}
