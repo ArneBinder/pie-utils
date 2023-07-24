@@ -26,16 +26,16 @@ logger = logging.getLogger(__name__)
 D = TypeVar("D", bound=Document)
 
 
-def get_split_type(
-    dataset_split: Union[datasets.Dataset, datasets.IterableDataset]
+def get_pie_dataset_type(
+    hf_dataset: Union[datasets.Dataset, datasets.IterableDataset]
 ) -> Union[Type[Dataset], Type[IterableDataset]]:
-    if isinstance(dataset_split, datasets.Dataset):
+    if isinstance(hf_dataset, datasets.Dataset):
         return Dataset
-    elif isinstance(dataset_split, datasets.IterableDataset):
+    elif isinstance(hf_dataset, datasets.IterableDataset):
         return IterableDataset
     else:
         raise ValueError(
-            f"dataset_split must be of type Dataset or IterableDataset, but is {type(dataset_split)}"
+            f"dataset_split must be of type Dataset or IterableDataset, but is {type(hf_dataset)}"
         )
 
 
@@ -44,17 +44,17 @@ class DatasetDict(datasets.DatasetDict):
         return super().__getitem__(k)
 
     @classmethod
-    def load_dataset(cls, *args, **kwargs):
+    def load_dataset(cls, *args, **kwargs) -> "DatasetDict":
         return cls(datasets.load_dataset(*args, **kwargs))
 
     @classmethod
     def from_hf_dataset(
         cls, hf_dataset: datasets.DatasetDict, document_type: Union[str, Type[Document]]
-    ) -> datasets.DatasetDict:
+    ) -> "DatasetDict":
         doc_type = resolve_target(document_type)
-        res = type(hf_dataset)(
+        res = cls(
             {
-                k: get_split_type(v).from_hf_dataset(v, document_type=doc_type)
+                k: get_pie_dataset_type(v).from_hf_dataset(v, document_type=doc_type)
                 for k, v in hf_dataset.items()
             }
         )
