@@ -313,6 +313,23 @@ def test_filter(dataset_dict):
     assert_doc_lists_equal(dataset_dict_filtered["test"], dataset_dict["test"])
 
 
+def test_filter_iterable(iterable_dataset_dict):
+    dataset_dict_filtered = iterable_dataset_dict.filter(
+        function=lambda doc: len(doc["text"]) > 15,
+        split="train",
+    )
+    docs_train = list(dataset_dict_filtered["train"])
+    assert len(docs_train) == 2
+    assert all(len(doc.text) > 15 for doc in docs_train)
+
+
+def test_filter_unknown_dataset_type():
+    dataset_dict = DatasetDict({"train": "foo"})
+    with pytest.raises(ValueError) as excinfo:
+        dataset_dict.filter(function=lambda doc: True, split="train")
+        assert excinfo.value == "dataset split has unknown type: <class 'str'>"
+
+
 def test_filter_noop(dataset_dict):
     # passing no filter function should be a noop
     dataset_dict_filtered = dataset_dict.filter(split="train")
