@@ -263,3 +263,33 @@ def test_drop_splits(dataset_dict):
     assert set(dataset_dict_dropped) == {"test"}
     assert len(dataset_dict_dropped["test"]) == len(dataset_dict["test"])
     assert_doc_lists_equal(dataset_dict_dropped["test"], dataset_dict["test"])
+
+
+def test_concat_splits(dataset_dict):
+    dataset_dict_concatenated = dataset_dict.concat_splits(["train", "validation"], target="train")
+    assert set(dataset_dict_concatenated) == {"test", "train"}
+    assert len(dataset_dict_concatenated["train"]) == len(dataset_dict["train"]) + len(
+        dataset_dict["validation"]
+    )
+    assert_doc_lists_equal(
+        dataset_dict_concatenated["train"],
+        list(dataset_dict["train"]) + list(dataset_dict["validation"]),
+    )
+
+
+def test_concat_splits_no_splits(dataset_dict):
+    with pytest.raises(ValueError) as excinfo:
+        dataset_dict.concat_splits(splits=[], target="train")
+        assert excinfo.value == "please provide at least one split to concatenate"
+
+
+def test_concat_splits_different_dataset_types(dataset_dict, iterable_dataset_dict):
+    dataset_dict_to_concat = DatasetDict(
+        {
+            "train": dataset_dict["train"],
+            "validation": iterable_dataset_dict["validation"],
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        dataset_dict_to_concat.concat_splits(splits=["train", "validation"], target="train")
+        assert excinfo.value.startswith("dataset types of splits to concatenate differ:")
