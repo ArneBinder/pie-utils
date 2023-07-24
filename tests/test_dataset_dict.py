@@ -93,7 +93,9 @@ def test_document_type_different_types(dataset_dict):
 @pytest.fixture(scope="module")
 def iterable_dataset_dict():
     return DatasetDict.from_json(
-        data_dir=DATA_PATH, document_type=DocumentWithEntitiesAndRelations, streaming=True,
+        data_dir=DATA_PATH,
+        document_type=DocumentWithEntitiesAndRelations,
+        streaming=True,
     )
 
 
@@ -103,6 +105,8 @@ def test_iterable_dataset_dict(iterable_dataset_dict):
 
 def test_get_pie_dataset_type():
     hf_ds = datasets.load_dataset("json", data_dir=DATA_PATH, split="train")
-    hf_ds_iterable = datasets.load_dataset("json", data_dir=DATA_PATH, split="train", streaming=True)
+    hf_ds_iterable = datasets.load_dataset(
+        "json", data_dir=DATA_PATH, split="train", streaming=True
+    )
     assert get_pie_dataset_type(hf_ds) == Dataset
     assert get_pie_dataset_type(hf_ds_iterable) == IterableDataset
