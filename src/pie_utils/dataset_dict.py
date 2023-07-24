@@ -23,9 +23,6 @@ from pie_utils.hydra import resolve_target
 logger = logging.getLogger(__name__)
 
 
-D = TypeVar("D", bound=Document)
-
-
 def get_pie_dataset_type(
     hf_dataset: Union[datasets.Dataset, datasets.IterableDataset]
 ) -> Union[Type[Dataset], Type[IterableDataset]]:
@@ -120,7 +117,7 @@ class DatasetDict(datasets.DatasetDict):
     def map(
         self,
         function: Optional[Union[Callable, str]] = None,
-        result_document_type: Optional[Union[str, Type[D]]] = None,
+        result_document_type: Optional[Union[str, Type[Document]]] = None,
         **kwargs,
     ) -> "DatasetDict":
         if function is not None:
