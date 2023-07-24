@@ -64,8 +64,12 @@ def test_to_json_and_back(dataset_dict, tmp_path):
 
 
 def test_document_type_empty_no_splits():
-    # the document type is not defined if the dataset does not contain any splits
-    assert DatasetDict().document_type is None
+    with pytest.raises(ValueError) as excinfo:
+        DatasetDict().document_type
+        assert (
+            str(excinfo.value)
+            == "dataset does not contain any splits, cannot determine document type"
+        )
 
 
 def test_document_type_different_types(dataset_dict):
@@ -89,6 +93,30 @@ def test_document_type_different_types(dataset_dict):
         assert str(excinfo.value).startswith(
             "dataset contains splits with different document types:"
         )
+
+
+def test_dataset_type(dataset_dict):
+    assert dataset_dict.dataset_type is Dataset
+
+
+def test_dataset_type_no_splits():
+    with pytest.raises(ValueError) as excinfo:
+        DatasetDict().dataset_type
+        assert (
+            excinfo.value == "dataset does not contain any splits, cannot determine dataset type"
+        )
+
+
+def test_dataset_type_different_type(dataset_dict, iterable_dataset_dict):
+    dataset_dict_different_type = DatasetDict(
+        {
+            "train": dataset_dict["train"],
+            "test": iterable_dataset_dict["test"],
+        }
+    )
+    with pytest.raises(ValueError) as excinfo:
+        dataset_dict_different_type.dataset_type
+        assert excinfo.value == "dataset contains splits with different dataset types"
 
 
 @pytest.fixture(scope="module")

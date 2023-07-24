@@ -72,7 +72,7 @@ class DatasetDict(datasets.DatasetDict):
                     f.write(json.dumps(doc.asdict(), **kwargs) + "\n")
 
     @property
-    def document_type(self) -> Optional[Type[Document]]:
+    def document_type(self) -> Type[Document]:
         """Returns the document type of the dataset.
 
         If there are no splits in the dataset, returns None. Raises an error if the dataset splits
@@ -80,13 +80,32 @@ class DatasetDict(datasets.DatasetDict):
         """
 
         if len(self) == 0:
-            return None
+            raise ValueError("dataset does not contain any splits, cannot determine document type")
         document_types = {ds.document_type for ds in self.values()}
         if len(document_types) > 1:
             raise ValueError(
                 f"dataset contains splits with different document types: {document_types}"
             )
         return next(iter(document_types))
+
+    @property
+    def dataset_type(self) -> Union[Type[Dataset], Type[IterableDataset]]:
+        """Returns the dataset type of the dataset.
+
+        If there are no splits in the dataset, returns None. Raises an error if the dataset splits
+        have different dataset types.
+        """
+
+        if len(self) == 0:
+            raise ValueError(
+                "dataset does not contain any splits, cannot determine the dataset type"
+            )
+        dataset_types = {type(ds) for ds in self.values()}
+        if len(dataset_types) > 1:
+            raise ValueError(
+                f"dataset contains splits with different dataset types: {dataset_types}"
+            )
+        return next(iter(dataset_types))
 
     def map(
         self,
@@ -184,24 +203,13 @@ class DatasetDict(datasets.DatasetDict):
     def concat_splits(self, splits: List[str], target: str) -> "DatasetDict":
         result = type(self)({name: ds for name, ds in self.items() if name not in splits})
         splits_to_concat = [self[name] for name in splits]
-        # ensure that the document types are the same
-        document_type = None
-        dataset_type = None
-        for split in splits_to_concat:
-            if document_type is not None and split.document_type != document_type:
-                raise ValueError(
-                    f"document types of splits to concatenate differ: {document_type} != {split.document_type}"
-                )
-            document_type = split.document_type
-            if dataset_type is not None and type(split) != dataset_type:
-                raise ValueError(
-                    f"dataset types of splits to concatenate differ: {dataset_type} != {type(split)}"
-                )
-            dataset_type = type(split)
-        if document_type is None or dataset_type is None:
+        if len(splits_to_concat) == 0:
             raise ValueError("please provide at least one split to concatenate")
+
         concatenated = datasets.concatenate_datasets(splits_to_concat)
-        result[target] = dataset_type.from_hf_dataset(concatenated, document_type=document_type)
+        result[target] = self.dataset_type.from_hf_dataset(
+            concatenated, document_type=self.document_type
+        )
         split_sizes = {k: len(v) for k, v in result.items()}
         logger.info(f"dataset size after concatenating splits: {split_sizes}")
         return result
