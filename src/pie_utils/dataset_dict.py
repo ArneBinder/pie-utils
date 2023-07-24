@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 from typing import (
     Callable,
     Dict,
@@ -43,9 +44,9 @@ class DatasetDict(datasets.DatasetDict):
     def __getitem__(self, k) -> Dataset:
         return super().__getitem__(k)
 
-    @classmethod
-    def load_dataset(cls, *args, **kwargs) -> "DatasetDict":
-        return cls(datasets.load_dataset(*args, **kwargs))
+    # @classmethod
+    # def load_dataset(cls, *args, **kwargs) -> "DatasetDict":
+    #    return cls(datasets.load_dataset(*args, **kwargs))
 
     @classmethod
     def from_hf_dataset(
@@ -242,12 +243,13 @@ class DatasetDict(datasets.DatasetDict):
         )
         return result
 
-    def to_json(self, path: str, **kwargs):
+    def to_json(self, path: Union[str, Path], **kwargs) -> None:
+        path = Path(path)
         for split, dataset in self.items():
-            split_path = os.path.join(path, split)
+            split_path = path / split
             logger.info(f'serialize documents to "{split_path}" ...')
             os.makedirs(split_path, exist_ok=True)
-            file_name = os.path.join(split_path, "documents.jsonl")
+            file_name = split_path / "documents.jsonl"
             with open(file_name, "w") as f:
                 for doc in dataset:
                     f.write(json.dumps(doc.asdict(), **kwargs) + "\n")
@@ -255,11 +257,26 @@ class DatasetDict(datasets.DatasetDict):
     @classmethod
     def from_json(
         cls,
-        data_files: Optional[Union[str, Sequence[str], Mapping[str, Union[str, Sequence[str]]]]],
         document_type: Union[Type[Document], str],
         **kwargs,
     ) -> "DatasetDict":
         return cls.from_hf_dataset(
-            datasets.load_dataset("json", data_files=data_files, **kwargs),
-            document_type=document_type,
+            datasets.load_dataset("json", **kwargs), document_type=document_type
         )
+
+    @property
+    def document_type(self) -> Optional[Type[Document]]:
+        """Returns the document type of the dataset.
+
+        If there are no splits in the dataset, returns None. Raises an error if the dataset splits
+        have different document types.
+        """
+
+        if len(self) == 0:
+            return None
+        document_types = {ds.document_type for ds in self.values()}
+        if len(document_types) > 1:
+            raise ValueError(
+                f"dataset contains splits with different document types: {document_types}"
+            )
+        return next(iter(document_types))

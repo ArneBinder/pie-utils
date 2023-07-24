@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 
 import datasets
 import pytest
@@ -29,22 +30,59 @@ def test_create_fixture_data():
     conll2003.to_json(FIXTURES_ROOT / "dataset_dict" / "conll2003_extract_new")
 
 
+@dataclass
+class DocumentWithEntitiesAndRelations(TextDocument):
+    entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
+
+
 @pytest.fixture(scope="module")
 def dataset_dict():
-    @dataclass
-    class DocumentWithEntitiesAndRelations(TextDocument):
-        entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
-
-    # get all folders in DATA_PATH that contain a documents.jsonl file
-    data_files = {
-        folder.name: str(folder / "documents.jsonl")
-        for folder in DATA_PATH.iterdir()
-        if (folder / "documents.jsonl").exists()
-    }
     return DatasetDict.from_json(
-        data_files=data_files, document_type=DocumentWithEntitiesAndRelations
+        data_dir=DATA_PATH, document_type=DocumentWithEntitiesAndRelations
     )
 
 
-def test_dataset_dict_from_json(dataset_dict):
+def test_from_json(dataset_dict):
     assert set(dataset_dict) == {"train", "test", "validation"}
+
+
+def test_to_json_and_back(dataset_dict, tmp_path):
+    path = Path(tmp_path) / "dataset_dict"
+    dataset_dict.to_json(path)
+    dataset_dict_from_json = DatasetDict.from_json(
+        data_dir=path,
+        document_type=dataset_dict.document_type,
+    )
+    assert set(dataset_dict_from_json) == set(dataset_dict)
+    for split in dataset_dict:
+        assert len(dataset_dict_from_json[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_from_json[split], dataset_dict[split]):
+            assert doc1 == doc2
+
+
+def test_document_type_empty_no_splits():
+    # the document type is not defined if the dataset does not contain any splits
+    assert DatasetDict().document_type is None
+
+
+def test_document_type_different_types(dataset_dict):
+    # load the example dataset as a different document type
+    dataset_dict_different_type = DatasetDict.from_json(
+        data_dir=DATA_PATH,
+        document_type=TextDocument,
+    )
+    assert dataset_dict_different_type.document_type is TextDocument
+    # create a dataset dict with different document types for train and test splits
+    dataset_dict_different_types = DatasetDict(
+        {
+            "train": dataset_dict["train"],
+            "test": dataset_dict_different_type["test"],
+        }
+    )
+    # accessing the document type should raise an error with the message that starts with
+    # "dataset contains splits with different document types:"
+    with pytest.raises(ValueError) as excinfo:
+        dataset_dict_different_types.document_type
+        assert str(excinfo.value).startswith(
+            "dataset contains splits with different document types:"
+        )
