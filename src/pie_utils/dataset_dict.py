@@ -91,7 +91,7 @@ class DatasetDict(datasets.DatasetDict):
     def map(
         self,
         function: Optional[Union[Callable, str]] = None,
-        result_type: Optional[Union[str, Type[D]]] = None,
+        result_document_type: Optional[Union[str, Type[D]]] = None,
         **kwargs,
     ) -> "DatasetDict":
         if function is not None:
@@ -99,12 +99,13 @@ class DatasetDict(datasets.DatasetDict):
         else:
 
             def identity(x):
-                return x
+                # exclude from coverage because its usage happens in the map which is not collected
+                return x  # pragma: no cover
 
             func = identity
         map_kwargs = dict(function=func, fn_kwargs=kwargs)
-        if result_type is not None:
-            map_kwargs["result_document_type"] = resolve_target(result_type)
+        if result_document_type is not None:
+            map_kwargs["result_document_type"] = resolve_target(result_document_type)
         result = type(self)({k: v.map(**map_kwargs) for k, v in self.items()})
 
         return result

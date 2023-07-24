@@ -112,3 +112,38 @@ def test_get_pie_dataset_type():
     assert get_pie_dataset_type(hf_ds_iterable) == IterableDataset
     with pytest.raises(ValueError):
         get_pie_dataset_type("not a dataset")
+
+
+def map_fn(doc):
+    doc.text = doc.text.upper()
+    return doc
+
+
+@pytest.mark.parametrize(
+    "function",
+    [map_fn, "tests.test_dataset_dict.map_fn"],
+)
+def test_map(dataset_dict, function):
+    dataset_dict_mapped = dataset_dict.map(function)
+    for split in dataset_dict:
+        assert len(dataset_dict_mapped[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_mapped[split], dataset_dict[split]):
+            assert doc1.text == doc2.text.upper()
+
+
+def test_map_noop(dataset_dict):
+    dataset_dict_mapped = dataset_dict.map()
+    for split in dataset_dict:
+        assert len(dataset_dict_mapped[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_mapped[split], dataset_dict[split]):
+            assert doc1 == doc2
+
+
+def test_map_with_result_document_type(dataset_dict):
+    dataset_dict_mapped = dataset_dict.map(result_document_type=TextDocument)
+    for split in dataset_dict:
+        assert len(dataset_dict_mapped[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_mapped[split], dataset_dict[split]):
+            assert isinstance(doc1, TextDocument)
+            assert isinstance(doc2, DocumentWithEntitiesAndRelations)
+            assert doc1.text == doc2.text
