@@ -2,17 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    SupportsIndex,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Dict, List, Optional, SupportsIndex, Type, Union
 
 import datasets
 from pytorch_ie import Dataset, IterableDataset
