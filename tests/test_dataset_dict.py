@@ -377,3 +377,10 @@ def test_move_to_new_split_missing_arguments(dataset_dict):
             target_split="new_validation",
         )
         assert excinfo.value == "please provide either a list of ids or a filter function"
+
+
+def test_cast_document_type(dataset_dict):
+    dataset_dict_cast = dataset_dict.cast_document_type(TextDocument)
+    assert dataset_dict_cast.document_type == TextDocument
+    for split in dataset_dict_cast:
+        assert all(isinstance(doc, TextDocument) for doc in dataset_dict_cast[split])
