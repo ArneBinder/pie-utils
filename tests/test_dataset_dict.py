@@ -228,3 +228,10 @@ def test_add_test_split(dataset_dict):
     assert len(dataset_dict_with_test["validation"]) == len(dataset_dict["validation"])
     assert_doc_lists_equal(dataset_dict_with_test["train"], dataset_dict["train"])
     assert_doc_lists_equal(dataset_dict_with_test["validation"], dataset_dict["validation"])
+
+
+def test_drop_splits(dataset_dict):
+    dataset_dict_dropped = dataset_dict.drop_splits(["train", "validation"])
+    assert set(dataset_dict_dropped) == {"test"}
+    assert len(dataset_dict_dropped["test"]) == len(dataset_dict["test"])
+    assert_doc_lists_equal(dataset_dict_dropped["test"], dataset_dict["test"])
