@@ -176,3 +176,27 @@ def test_select(dataset_dict):
     assert dataset_dict_selected["train"][0] == dataset_dict["train"][0]
     assert dataset_dict_selected["train"][1] == dataset_dict["train"][1]
     assert dataset_dict_selected["train"][2] == dataset_dict["train"][2]
+
+
+def test_rename_splits(dataset_dict):
+    mapping = {
+        "train": "train_renamed",
+        "test": "test_renamed",
+        "validation": "validation_renamed",
+    }
+    dataset_dict_renamed = dataset_dict.rename_splits(mapping)
+    assert set(dataset_dict_renamed) == set(mapping.values())
+    for split in dataset_dict:
+        split_renamed = mapping[split]
+        assert len(dataset_dict_renamed[split_renamed]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_renamed[split_renamed], dataset_dict[split]):
+            assert doc1 == doc2
+
+
+def test_rename_split_noop(dataset_dict):
+    dataset_dict_renamed = dataset_dict.rename_splits()
+    assert set(dataset_dict_renamed) == set(dataset_dict)
+    for split in dataset_dict:
+        assert len(dataset_dict_renamed[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_renamed[split], dataset_dict[split]):
+            assert doc1 == doc2
