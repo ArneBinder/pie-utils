@@ -99,3 +99,10 @@ def iterable_dataset_dict():
 
 def test_iterable_dataset_dict(iterable_dataset_dict):
     assert set(iterable_dataset_dict) == {"train", "test", "validation"}
+
+
+def test_get_pie_dataset_type():
+    hf_ds = datasets.load_dataset("json", data_dir=DATA_PATH, split="train")
+    hf_ds_iterable = datasets.load_dataset("json", data_dir=DATA_PATH, split="train", streaming=True)
+    assert get_pie_dataset_type(hf_ds) == Dataset
+    assert get_pie_dataset_type(hf_ds_iterable) == IterableDataset
