@@ -1,12 +1,13 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterable
 
 import datasets
 import pytest
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import LabeledSpan
-from pytorch_ie.core import AnnotationList, annotation_field
+from pytorch_ie.core import AnnotationList, Document, annotation_field
 from pytorch_ie.documents import TextDocument
 
 from pie_utils import DatasetDict
@@ -200,3 +201,30 @@ def test_rename_split_noop(dataset_dict):
         assert len(dataset_dict_renamed[split]) == len(dataset_dict[split])
         for doc1, doc2 in zip(dataset_dict_renamed[split], dataset_dict[split]):
             assert doc1 == doc2
+
+
+def assert_doc_lists_equal(docs: Iterable[Document], other_docs: Iterable[Document]):
+    assert all(doc1 == doc2 for doc1, doc2 in zip(docs, other_docs))
+
+
+def test_add_test_split(dataset_dict):
+    dataset_dict_with_test = dataset_dict.add_test_split(
+        source_split="test", target_split="new_test", test_size=1, shuffle=False
+    )
+    assert "new_test" in dataset_dict_with_test
+    assert len(dataset_dict_with_test["new_test"]) + len(dataset_dict_with_test["test"]) == len(
+        dataset_dict["test"]
+    )
+    assert len(dataset_dict_with_test["new_test"]) == 1
+    assert len(dataset_dict_with_test["test"]) == 2
+    assert_doc_lists_equal(dataset_dict_with_test["new_test"], dataset_dict["test"][2:])
+    assert_doc_lists_equal(dataset_dict_with_test["test"], dataset_dict["test"][:2])
+    test_ids = [doc.id for doc in dataset_dict_with_test["test"]]
+    new_test_ids = [doc.id for doc in dataset_dict_with_test["new_test"]]
+    assert set(test_ids).intersection(set(new_test_ids)) == set()
+
+    # remaining splits should be unchanged
+    assert len(dataset_dict_with_test["train"]) == len(dataset_dict["train"])
+    assert len(dataset_dict_with_test["validation"]) == len(dataset_dict["validation"])
+    assert_doc_lists_equal(dataset_dict_with_test["train"], dataset_dict["train"])
+    assert_doc_lists_equal(dataset_dict_with_test["validation"], dataset_dict["validation"])
