@@ -261,20 +261,32 @@ class DatasetDict(datasets.DatasetDict):
 
     def move_to_new_split(
         self,
-        ids: List[str],
+        ids: Optional[List[str]] = None,
+        filter_function: Optional[Union[Callable[[Dict[str, Any]], bool], str]] = None,
         source_split: str = "train",
         target_split: str = "test",
     ) -> "DatasetDict":
-        ids_set = set(ids)
-        dataset_without_ids = self.filter(
-            dataset=self,
-            split=source_split,
-            function=lambda ex: ex["id"] not in ids_set,
-        )
+        if filter_function is not None:
+            filter_func = resolve_target(filter_function)
+        else:
+            if ids is None:
+                raise ValueError("please provide either a list of ids or a filter function")
+
+            ids_set = set(ids)
+
+            def filter_with_ids(ex: Dict[str, Any]):
+                # exclude from coverage because its usage happens in the map which is not collected
+                return ex["id"] in ids_set  # pragma: no cover
+
+            filter_func = filter_with_ids
+
         dataset_with_only_ids = self.filter(
-            dataset=self,
             split=source_split,
-            function=lambda ex: ex["id"] in ids_set,
+            function=filter_func,
+        )
+        dataset_without_ids = self.filter(
+            split=source_split,
+            function=lambda ex: not filter_func(ex),
         )
         dataset_without_ids[target_split] = dataset_with_only_ids[source_split]
 

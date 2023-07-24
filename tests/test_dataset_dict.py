@@ -322,3 +322,41 @@ def test_filter_noop(dataset_dict):
     assert_doc_lists_equal(dataset_dict_filtered["train"], dataset_dict["train"])
     assert_doc_lists_equal(dataset_dict_filtered["validation"], dataset_dict["validation"])
     assert_doc_lists_equal(dataset_dict_filtered["test"], dataset_dict["test"])
+
+
+@pytest.mark.parametrize(
+    # we can either provide ids or a filter function
+    "ids,filter_function",
+    [
+        (["1", "2"], None),
+        (None, lambda doc: doc["id"] in ["1", "2"]),
+    ],
+)
+def test_move_to_new_split(dataset_dict, ids, filter_function):
+    # move the second and third document from train to new_validation
+    dataset_dict_moved = dataset_dict.move_to_new_split(
+        ids=ids,
+        filter_function=filter_function,
+        source_split="train",
+        target_split="new_validation",
+    )
+    assert len(dataset_dict_moved["train"]) == 1
+    assert len(dataset_dict_moved["new_validation"]) == 2
+    assert_doc_lists_equal(dataset_dict_moved["train"], dataset_dict["train"][:1])
+
+    # the remaining splits should be unchanged
+    assert len(dataset_dict_moved["validation"]) == len(dataset_dict["validation"]) == 3
+    assert len(dataset_dict_moved["test"]) == len(dataset_dict["test"]) == 3
+    assert_doc_lists_equal(dataset_dict_moved["validation"], dataset_dict["validation"])
+    assert_doc_lists_equal(dataset_dict_moved["test"], dataset_dict["test"])
+
+
+def test_move_to_new_split_missing_arguments(dataset_dict):
+    with pytest.raises(ValueError) as excinfo:
+        dataset_dict.move_to_new_split(
+            ids=None,
+            filter_function=None,
+            source_split="train",
+            target_split="new_validation",
+        )
+        assert excinfo.value == "please provide either a list of ids or a filter function"
