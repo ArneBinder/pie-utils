@@ -252,9 +252,11 @@ class DatasetDict(datasets.DatasetDict):
             result[target_split_name] = type(pie_split).from_hf_dataset(
                 dataset=hf_split_filtered, document_type=pie_split.document_type
             )
-            logger.info(
-                f"filtered split [{target_split_name}] has {len(result[target_split_name])} entries"
-            )
+            # iterable datasets do not have a length
+            if not isinstance(result[target_split_name], IterableDataset):
+                logger.info(
+                    f"filtered split [{target_split_name}] has {len(result[target_split_name])} entries"
+                )
             return result
         else:
             return self
