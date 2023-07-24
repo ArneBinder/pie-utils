@@ -293,3 +293,32 @@ def test_concat_splits_different_dataset_types(dataset_dict, iterable_dataset_di
     with pytest.raises(ValueError) as excinfo:
         dataset_dict_to_concat.concat_splits(splits=["train", "validation"], target="train")
         assert excinfo.value.startswith("dataset types of splits to concatenate differ:")
+
+
+def test_filter(dataset_dict):
+    dataset_dict_filtered = dataset_dict.filter(
+        function=lambda doc: len(doc["text"]) > 15,
+        split="train",
+    )
+    assert all(len(doc.text) > 15 for doc in dataset_dict_filtered["train"])
+    assert len(dataset_dict["train"]) == 3
+    assert len(dataset_dict_filtered["train"]) == 2
+    assert dataset_dict_filtered["train"][0] == dataset_dict["train"][0]
+    assert dataset_dict_filtered["train"][1] == dataset_dict["train"][2]
+
+    # remaining splits should be unchanged
+    assert len(dataset_dict_filtered["validation"]) == len(dataset_dict["validation"]) == 3
+    assert len(dataset_dict_filtered["test"]) == len(dataset_dict["test"]) == 3
+    assert_doc_lists_equal(dataset_dict_filtered["validation"], dataset_dict["validation"])
+    assert_doc_lists_equal(dataset_dict_filtered["test"], dataset_dict["test"])
+
+
+def test_filter_noop(dataset_dict):
+    # passing no filter function should be a noop
+    dataset_dict_filtered = dataset_dict.filter(split="train")
+    assert len(dataset_dict_filtered["train"]) == len(dataset_dict["train"]) == 3
+    assert len(dataset_dict_filtered["validation"]) == len(dataset_dict["validation"]) == 3
+    assert len(dataset_dict_filtered["test"]) == len(dataset_dict["test"]) == 3
+    assert_doc_lists_equal(dataset_dict_filtered["train"], dataset_dict["train"])
+    assert_doc_lists_equal(dataset_dict_filtered["validation"], dataset_dict["validation"])
+    assert_doc_lists_equal(dataset_dict_filtered["test"], dataset_dict["test"])

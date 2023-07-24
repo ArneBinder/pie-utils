@@ -224,17 +224,12 @@ class DatasetDict(datasets.DatasetDict):
         if function is not None:
             # create a shallow copy to not modify the input
             result = type(self)(self)
-            if isinstance(function, str):
-                function = resolve_target(function)
-
+            function = resolve_target(function)
             pie_split = result[split]
-            if isinstance(pie_split, Dataset):
-                hf_split = datasets.Dataset(**Dataset.get_base_kwargs(pie_split))
-            elif isinstance(pie_split, IterableDataset):
-                hf_split = datasets.IterableDataset(**IterableDataset.get_base_kwargs(pie_split))
-            else:
-                raise Exception(f"dataset split has unknown type: {type(pie_split)}")
-            hf_split_filtered = hf_split.filter(function=function, **kwargs)
+            # TODO: Implement pytorch_ie.Dataset.filter() in a similar way such as map() to make use of the
+            #  document type. For now, the filter function is called directly on the HF dataset and thus needs to
+            #  accept a dict as input.
+            hf_split_filtered = pie_split.filter(function=function, **kwargs)
             target_split_name = result_split_name or split
             result[target_split_name] = type(pie_split).from_hf_dataset(
                 dataset=hf_split_filtered, document_type=pie_split.document_type
