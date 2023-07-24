@@ -61,6 +61,44 @@ class DatasetDict(datasets.DatasetDict):
         )
         return res
 
+    @classmethod
+    def from_json(
+        cls,
+        document_type: Union[Type[Document], str],
+        **kwargs,
+    ) -> "DatasetDict":
+        return cls.from_hf_dataset(
+            datasets.load_dataset("json", **kwargs), document_type=document_type
+        )
+
+    def to_json(self, path: Union[str, Path], **kwargs) -> None:
+        path = Path(path)
+        for split, dataset in self.items():
+            split_path = path / split
+            logger.info(f'serialize documents to "{split_path}" ...')
+            os.makedirs(split_path, exist_ok=True)
+            file_name = split_path / "documents.jsonl"
+            with open(file_name, "w") as f:
+                for doc in dataset:
+                    f.write(json.dumps(doc.asdict(), **kwargs) + "\n")
+
+    @property
+    def document_type(self) -> Optional[Type[Document]]:
+        """Returns the document type of the dataset.
+
+        If there are no splits in the dataset, returns None. Raises an error if the dataset splits
+        have different document types.
+        """
+
+        if len(self) == 0:
+            return None
+        document_types = {ds.document_type for ds in self.values()}
+        if len(document_types) > 1:
+            raise ValueError(
+                f"dataset contains splits with different document types: {document_types}"
+            )
+        return next(iter(document_types))
+
     def map(
         self,
         function: Optional[Union[Callable, str]] = None,
@@ -242,41 +280,3 @@ class DatasetDict(datasets.DatasetDict):
             }
         )
         return result
-
-    def to_json(self, path: Union[str, Path], **kwargs) -> None:
-        path = Path(path)
-        for split, dataset in self.items():
-            split_path = path / split
-            logger.info(f'serialize documents to "{split_path}" ...')
-            os.makedirs(split_path, exist_ok=True)
-            file_name = split_path / "documents.jsonl"
-            with open(file_name, "w") as f:
-                for doc in dataset:
-                    f.write(json.dumps(doc.asdict(), **kwargs) + "\n")
-
-    @classmethod
-    def from_json(
-        cls,
-        document_type: Union[Type[Document], str],
-        **kwargs,
-    ) -> "DatasetDict":
-        return cls.from_hf_dataset(
-            datasets.load_dataset("json", **kwargs), document_type=document_type
-        )
-
-    @property
-    def document_type(self) -> Optional[Type[Document]]:
-        """Returns the document type of the dataset.
-
-        If there are no splits in the dataset, returns None. Raises an error if the dataset splits
-        have different document types.
-        """
-
-        if len(self) == 0:
-            return None
-        document_types = {ds.document_type for ds in self.values()}
-        if len(document_types) > 1:
-            raise ValueError(
-                f"dataset contains splits with different document types: {document_types}"
-            )
-        return next(iter(document_types))
