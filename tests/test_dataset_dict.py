@@ -8,7 +8,7 @@ import pytest
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import LabeledSpan
 from pytorch_ie.core import AnnotationList, Document, annotation_field
-from pytorch_ie.documents import TextDocument
+from pytorch_ie.documents import TextBasedDocument
 
 from pie_utils import DatasetDict
 from pie_utils.dataset_dict import get_pie_dataset_type
@@ -30,11 +30,11 @@ def test_create_fixture_data():
     for split in list(conll2003):
         # restrict all splits to 3 examples
         conll2003 = conll2003.select(split=split, stop=3)
-    conll2003.to_json(FIXTURES_ROOT / "dataset_dict" / "conll2003_extract_new")
+    conll2003.to_json(DATA_PATH)
 
 
 @dataclass
-class DocumentWithEntitiesAndRelations(TextDocument):
+class DocumentWithEntitiesAndRelations(TextBasedDocument):
     entities: AnnotationList[LabeledSpan] = annotation_field(target="text")
 
 
@@ -47,6 +47,22 @@ def dataset_dict():
 
 def test_from_json(dataset_dict):
     assert set(dataset_dict) == {"train", "test", "validation"}
+    assert len(dataset_dict["train"]) == 3
+    assert len(dataset_dict["test"]) == 3
+    assert len(dataset_dict["validation"]) == 3
+
+
+@pytest.fixture(scope="module")
+def iterable_dataset_dict():
+    return DatasetDict.from_json(
+        data_dir=DATA_PATH,
+        document_type=DocumentWithEntitiesAndRelations,
+        streaming=True,
+    )
+
+
+def test_iterable_dataset_dict(iterable_dataset_dict):
+    assert set(iterable_dataset_dict) == {"train", "test", "validation"}
 
 
 def test_to_json_and_back(dataset_dict, tmp_path):
@@ -76,9 +92,9 @@ def test_document_type_different_types(dataset_dict):
     # load the example dataset as a different document type
     dataset_dict_different_type = DatasetDict.from_json(
         data_dir=DATA_PATH,
-        document_type=TextDocument,
+        document_type=TextBasedDocument,
     )
-    assert dataset_dict_different_type.document_type is TextDocument
+    assert dataset_dict_different_type.document_type is TextBasedDocument
     # create a dataset dict with different document types for train and test splits
     dataset_dict_different_types = DatasetDict(
         {
@@ -119,19 +135,6 @@ def test_dataset_type_different_type(dataset_dict, iterable_dataset_dict):
         assert excinfo.value == "dataset contains splits with different dataset types"
 
 
-@pytest.fixture(scope="module")
-def iterable_dataset_dict():
-    return DatasetDict.from_json(
-        data_dir=DATA_PATH,
-        document_type=DocumentWithEntitiesAndRelations,
-        streaming=True,
-    )
-
-
-def test_iterable_dataset_dict(iterable_dataset_dict):
-    assert set(iterable_dataset_dict) == {"train", "test", "validation"}
-
-
 def test_get_pie_dataset_type():
     hf_ds = datasets.load_dataset("json", data_dir=DATA_PATH, split="train")
     assert get_pie_dataset_type(hf_ds) == Dataset
@@ -169,11 +172,11 @@ def test_map_noop(dataset_dict):
 
 
 def test_map_with_result_document_type(dataset_dict):
-    dataset_dict_mapped = dataset_dict.map(result_document_type=TextDocument)
+    dataset_dict_mapped = dataset_dict.map(result_document_type=TextBasedDocument)
     for split in dataset_dict:
         assert len(dataset_dict_mapped[split]) == len(dataset_dict[split])
         for doc1, doc2 in zip(dataset_dict_mapped[split], dataset_dict[split]):
-            assert isinstance(doc1, TextDocument)
+            assert isinstance(doc1, TextBasedDocument)
             assert isinstance(doc2, DocumentWithEntitiesAndRelations)
             assert doc1.text == doc2.text
 
@@ -380,7 +383,7 @@ def test_move_to_new_split_missing_arguments(dataset_dict):
 
 
 def test_cast_document_type(dataset_dict):
-    dataset_dict_cast = dataset_dict.cast_document_type(TextDocument)
-    assert dataset_dict_cast.document_type == TextDocument
+    dataset_dict_cast = dataset_dict.cast_document_type(TextBasedDocument)
+    assert dataset_dict_cast.document_type == TextBasedDocument
     for split in dataset_dict_cast:
-        assert all(isinstance(doc, TextDocument) for doc in dataset_dict_cast[split])
+        assert all(isinstance(doc, TextBasedDocument) for doc in dataset_dict_cast[split])
