@@ -246,7 +246,7 @@ class DatasetDict(datasets.DatasetDict):
             elif isinstance(pie_split, IterableDataset):
                 hf_split = datasets.IterableDataset(**IterableDataset.get_base_kwargs(pie_split))
             else:
-                raise Exception(f"dataset split has unknown type: {type(pie_split)}")
+                raise ValueError(f"dataset split has unknown type: {type(pie_split)}")
             hf_split_filtered = hf_split.filter(function=function, **kwargs)
             target_split_name = result_split_name or split
             result[target_split_name] = type(pie_split).from_hf_dataset(
