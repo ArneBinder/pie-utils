@@ -2,7 +2,17 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, SupportsIndex, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    SupportsIndex,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import datasets
 from pytorch_ie import Dataset, IterableDataset
@@ -229,7 +239,15 @@ class DatasetDict(datasets.DatasetDict):
             # TODO: Implement pytorch_ie.Dataset.filter() in a similar way such as map() to make use of the
             #  document type. For now, the filter function is called directly on the HF dataset and thus needs to
             #  accept a dict as input.
-            hf_split_filtered = pie_split.filter(function=function, **kwargs)
+            # we need to convert the dataset back to HF because the filter function internally uses map() which will
+            # break if the PIE variant is used
+            if isinstance(pie_split, Dataset):
+                hf_split = datasets.Dataset(**Dataset.get_base_kwargs(pie_split))
+            elif isinstance(pie_split, IterableDataset):
+                hf_split = datasets.IterableDataset(**IterableDataset.get_base_kwargs(pie_split))
+            else:
+                raise Exception(f"dataset split has unknown type: {type(pie_split)}")
+            hf_split_filtered = hf_split.filter(function=function, **kwargs)
             target_split_name = result_split_name or split
             result[target_split_name] = type(pie_split).from_hf_dataset(
                 dataset=hf_split_filtered, document_type=pie_split.document_type
