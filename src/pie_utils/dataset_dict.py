@@ -8,6 +8,12 @@ import datasets
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.core import Document
 
+from pie_utils.document.processors.common import (
+    EnterDatasetDictMixin,
+    EnterDatasetMixin,
+    ExitDatasetDictMixin,
+    ExitDatasetMixin,
+)
 from pie_utils.hydra import resolve_target
 
 logger = logging.getLogger(__name__)
@@ -123,15 +129,21 @@ class DatasetDict(datasets.DatasetDict):
         if result_document_type is not None:
             map_kwargs["result_document_type"] = resolve_target(result_document_type)
 
+        if isinstance(func, EnterDatasetDictMixin):
+            func.enter_dataset_dict(self)
+
         result_dict = {}
         for split, dataset in self.items():
-            # if func provides a context manager, we enter it
-            if hasattr(func, "__enter__") and hasattr(func, "__exit__"):
-                with func:
-                    result_dict[split] = dataset.map(**map_kwargs)
-            else:
-                result_dict[split] = dataset.map(**map_kwargs)
+            if isinstance(func, EnterDatasetMixin):
+                func.enter_dataset(dataset=dataset, name=split)
+            result_dict[split] = dataset.map(**map_kwargs)
+            if isinstance(func, ExitDatasetMixin):
+                func.exit_dataset(dataset=result_dict[split], name=split)
+
         result = type(self)(result_dict)
+
+        if isinstance(func, ExitDatasetDictMixin):
+            func.exit_dataset_dict(self)
 
         return result
 
