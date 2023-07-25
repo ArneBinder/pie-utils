@@ -184,8 +184,8 @@ def test_map_with_result_document_type(dataset_dict):
 def test_map_with_context_manager(dataset_dict):
     class DocumentCounter:
         def __init__(self):
-            self.number = 0
             self.all_docs = []
+            self.reset_statistics()
 
         def reset_statistics(self):
             self.number = 0
@@ -197,7 +197,7 @@ def test_map_with_context_manager(dataset_dict):
         def __enter__(self):
             pass
 
-        def __exit__(self, exc_type, exc_value, traceback):
+        def __exit__(self, exc_type, exc_value, exc_traceback):
             self.all_docs.append(self.number)
             self.reset_statistics()
 
