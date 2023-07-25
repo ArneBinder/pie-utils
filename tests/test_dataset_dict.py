@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional
 
 import datasets
 import pytest
@@ -179,6 +179,38 @@ def test_map_with_result_document_type(dataset_dict):
             assert isinstance(doc1, TextBasedDocument)
             assert isinstance(doc2, DocumentWithEntitiesAndRelations)
             assert doc1.text == doc2.text
+
+
+def test_map_with_context_manager(dataset_dict):
+    class DocumentCounter:
+        def __init__(self):
+            self.number = 0
+            self.all_docs = []
+
+        def reset_statistics(self):
+            self.number = 0
+
+        def __call__(self, doc):
+            self.number += 1
+            return doc
+
+        def __enter__(self):
+            pass
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.all_docs.append(self.number)
+            self.reset_statistics()
+
+    document_counter = DocumentCounter()
+    dataset_dict_mapped = dataset_dict.map(function=document_counter)
+    assert document_counter.all_docs == [3, 3, 3]
+
+    # the document_counter should not have been modified the dataset
+    assert set(dataset_dict_mapped) == set(dataset_dict)
+    for split in dataset_dict:
+        assert len(dataset_dict_mapped[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_mapped[split], dataset_dict[split]):
+            assert doc1 == doc2
 
 
 def test_select(dataset_dict):

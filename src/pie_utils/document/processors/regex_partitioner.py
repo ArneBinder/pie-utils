@@ -8,8 +8,6 @@ from typing import Any, Callable, Iterable, Iterator, Match
 
 from pytorch_ie.annotations import LabeledSpan
 
-from pie_utils.statistics import WithStatistics
-
 from ..types import DocumentWithPartitions
 
 logger = logging.getLogger(__name__)
@@ -78,7 +76,7 @@ def _get_partitions_with_matcher(
         yield span
 
 
-class RegexPartitioner(WithStatistics):
+class RegexPartitioner:
     """RegexPartitioner partitions a document into multiple partitions using a regular expression.
     For more information, refer to get_partitions_with_matcher() method.
 
@@ -145,3 +143,11 @@ class RegexPartitioner(WithStatistics):
             self.update_statistics("document_lengths", len(document.text))
 
         return document
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if self.collect_statistics:
+            self.show_statistics()
+            self.reset_statistics()

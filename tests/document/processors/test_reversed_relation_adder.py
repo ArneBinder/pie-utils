@@ -39,6 +39,7 @@ REL_JOHN_MEETS_S_JAMIE = BinaryRelation(
 def test_reversed_relation():
     reverse_relation_adder = ReversedRelationAdder(
         symmetric_relation_labels=[],
+        collect_statistics=True,
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT3)
@@ -101,6 +102,7 @@ def test_with_already_reversed_relations_allow():
     reverse_relation_adder_with_allow_already_reversed_relations = ReversedRelationAdder(
         symmetric_relation_labels=[],
         allow_already_reversed_relations=True,
+        collect_statistics=True,
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT1)

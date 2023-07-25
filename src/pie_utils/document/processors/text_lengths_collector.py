@@ -7,14 +7,12 @@ import statistics
 from pytorch_ie.annotations import Span
 from transformers import AutoTokenizer
 
-from pie_utils.statistics import WithStatistics
-
 from ..types import DocumentWithPartitions
 
 logger = logging.getLogger(__name__)
 
 
-class TextLengthsCollector(WithStatistics):
+class TextLengthsCollector:
     """This document processor collects the text lengths in means of token numbers and allows to
     show them as json dict and, if plotext is installed, as histogram. Its nature is purely
     statistical, it does not modify the documents.
@@ -52,6 +50,18 @@ class TextLengthsCollector(WithStatistics):
         self.num_docs = 0
         self.num_parts = 0
 
+    def get_statistics(self):
+        result = {
+            "min": min(self.text_lengths),
+            "max": max(self.text_lengths),
+            "mean": statistics.mean(self.text_lengths),
+            "stddev": statistics.pstdev(self.text_lengths),
+            "num_docs": self.num_docs,
+        }
+        if self.use_partition:
+            result["num_parts"] = self.num_parts
+        return result
+
     def show_statistics(self, description: str | None = None):
         description = description or "Statistics for text lengths"
         caption = f"{description} (tokenizer_name_or_path={self.tokenizer_name_or_path})"
@@ -68,16 +78,7 @@ class TextLengthsCollector(WithStatistics):
         except ModuleNotFoundError:  # pragma: no cover
             logger.info("install plotext to display the data as histogram at the console")
 
-        stats = {
-            "min": min(self.text_lengths),
-            "max": max(self.text_lengths),
-            "mean": statistics.mean(self.text_lengths),
-            "stddev": statistics.pstdev(self.text_lengths),
-            "num_docs": self.num_docs,
-        }
-        if self.use_partition:
-            stats["num_parts"] = self.num_parts
-
+        stats = self.get_statistics()
         logger.info(f"{caption}):\n{json.dumps(stats, indent=2)}")
 
     def __call__(self, document: DocumentWithPartitions) -> DocumentWithPartitions:
@@ -92,3 +93,10 @@ class TextLengthsCollector(WithStatistics):
         self.num_parts += len(partition)
         self.num_docs += 1
         return document
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.show_statistics()
+        self.reset_statistics()

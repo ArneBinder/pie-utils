@@ -10,14 +10,13 @@ from pytorch_ie.annotations import BinaryRelation, Span
 from pytorch_ie.utils.span import is_contained_in
 
 from pie_utils.span.slice import distance
-from pie_utils.statistics import WithStatistics
 
 from ..types import DocumentWithEntitiesRelationsAndPartitions
 
 logger = logging.getLogger(__name__)
 
 
-class CandidateRelationAdder(WithStatistics):
+class CandidateRelationAdder:
     """CandidateRelationAdder adds binary relations to a document based on various parameters. It
     goes through combinations of available entity pairs as possible candidates for new relations.
     Entity pairs which are already part of document as a relation are not added again.
@@ -212,3 +211,11 @@ class CandidateRelationAdder(WithStatistics):
             self.update_statistics("num_candidates_not_taken", num_candidates_not_taken)
 
         return document
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if self.collect_statistics:
+            self.show_statistics()
+            self.reset_statistics()

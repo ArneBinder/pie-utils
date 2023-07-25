@@ -122,7 +122,16 @@ class DatasetDict(datasets.DatasetDict):
         map_kwargs = dict(function=func, fn_kwargs=kwargs)
         if result_document_type is not None:
             map_kwargs["result_document_type"] = resolve_target(result_document_type)
-        result = type(self)({k: v.map(**map_kwargs) for k, v in self.items()})
+
+        result_dict = {}
+        for split, dataset in self.items():
+            # if func provides a context manager, we enter it
+            if hasattr(func, "__enter__") and hasattr(func, "__exit__"):
+                with func:
+                    result_dict[split] = dataset.map(**map_kwargs)
+            else:
+                result_dict[split] = dataset.map(**map_kwargs)
+        result = type(self)(result_dict)
 
         return result
 
