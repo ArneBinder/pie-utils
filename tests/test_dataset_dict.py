@@ -187,6 +187,7 @@ def test_map_with_result_document_type(dataset_dict):
             assert doc1.text == doc2.text
 
 
+# TODO: this test fails sometimes because enter_dataset() gets executed after the map() call, fix this!
 def test_map_with_context_manager(dataset_dict):
     class DocumentCounter(
         EnterDatasetMixin, ExitDatasetMixin, EnterDatasetDictMixin, ExitDatasetDictMixin
