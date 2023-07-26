@@ -8,6 +8,12 @@ import datasets
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.core import Document
 
+from pie_utils.document.processors.common import (
+    EnterDatasetDictMixin,
+    EnterDatasetMixin,
+    ExitDatasetDictMixin,
+    ExitDatasetMixin,
+)
 from pie_utils.hydra import resolve_target
 
 logger = logging.getLogger(__name__)
@@ -119,10 +125,25 @@ class DatasetDict(datasets.DatasetDict):
                 return x  # pragma: no cover
 
             func = identity
-        map_kwargs = dict(function=func, fn_kwargs=kwargs)
+        map_kwargs = dict(function=func, **kwargs)
         if result_document_type is not None:
             map_kwargs["result_document_type"] = resolve_target(result_document_type)
-        result = type(self)({k: v.map(**map_kwargs) for k, v in self.items()})
+
+        if isinstance(func, EnterDatasetDictMixin):
+            func.enter_dataset_dict(self)
+
+        result_dict = {}
+        for split, dataset in self.items():
+            if isinstance(func, EnterDatasetMixin):
+                func.enter_dataset(dataset=dataset, name=split)
+            result_dict[split] = dataset.map(**map_kwargs)
+            if isinstance(func, ExitDatasetMixin):
+                func.exit_dataset(dataset=result_dict[split], name=split)
+
+        result = type(self)(result_dict)
+
+        if isinstance(func, ExitDatasetDictMixin):
+            func.exit_dataset_dict(result)
 
         return result
 

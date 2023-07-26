@@ -1,12 +1,16 @@
 import copy
+import json
+import logging
 
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 
+from pie_utils import DatasetDict
 from pie_utils.document import (
     CandidateRelationAdder,
     DocumentWithEntitiesRelationsAndPartitions,
 )
+from tests import FIXTURES_ROOT
 
 
 @pytest.fixture
@@ -101,18 +105,32 @@ def test_candidate_relation_adder(document1):
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_statistics(document1):
+@pytest.fixture(scope="module")
+def dataset_dict():
+    return DatasetDict.from_json(
+        data_dir=FIXTURES_ROOT / "dataset_dict" / "conll2003_extract",
+        document_type=DocumentWithEntitiesRelationsAndPartitions,
+    )
+
+
+def test_candidate_relation_adder_with_statistics(document1, dataset_dict, caplog):
     candidate_relation_adder_with_statistics = CandidateRelationAdder(
         label="no_relation",
         collect_statistics=True,
         max_distance=8,
     )
 
-    document = document1
+    caplog.set_level(logging.INFO)
+    caplog.clear()
 
-    document = candidate_relation_adder_with_statistics(document)
-    assert len(document) == 3
-    original_stats = {
+    document = document1
+    candidate_relation_adder_with_statistics.enter_dataset(None)
+    candidate_relation_adder_with_statistics(document)
+    candidate_relation_adder_with_statistics.exit_dataset(None)
+    assert len(caplog.records) == 1
+    log_description, log_json = caplog.records[0].message.split("\n", maxsplit=1)
+    assert log_description.strip() == "Statistics:"
+    assert json.loads(log_json) == {
         "num_total_relation_candidates": 6,
         "num_available_relations": 1,
         "available_rels_within_allowed_distance": 0,
@@ -121,9 +139,6 @@ def test_candidate_relation_adder_with_statistics(document1):
         "num_candidates_not_taken": {"lives_in": 1, "no_relation": 5},
         "distances_taken": {},
     }
-    statistics = candidate_relation_adder_with_statistics._statistics
-    candidate_relation_adder_with_statistics.show_statistics()
-    assert statistics == original_stats
 
     with pytest.raises(TypeError) as e:
         candidate_relation_adder_with_statistics.update_statistics("no_relation", 1.0)

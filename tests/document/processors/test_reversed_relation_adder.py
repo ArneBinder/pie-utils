@@ -1,4 +1,6 @@
 import copy
+import json
+import logging
 
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
@@ -36,9 +38,10 @@ REL_JOHN_MEETS_S_JAMIE = BinaryRelation(
 )
 
 
-def test_reversed_relation():
+def test_reversed_relation(caplog):
     reverse_relation_adder = ReversedRelationAdder(
         symmetric_relation_labels=[],
+        collect_statistics=True,
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT3)
@@ -48,7 +51,11 @@ def test_reversed_relation():
     document.relations.append(REL_JAMIE_MEETS_JOHN.copy(head=jamie, tail=john))
 
     original_document = copy.deepcopy(document)
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+    reverse_relation_adder.enter_dataset(None)
     reverse_relation_adder(document)
+    reverse_relation_adder.exit_dataset(None)
 
     # Document contains two entities and one relation. One reverse relation will be created resulting in total two
     # relations.
@@ -61,14 +68,16 @@ def test_reversed_relation():
     assert str(relation.head) == str(john)
     assert str(relation.tail) == str(jamie)
     assert relation.label == "meets_reversed"
-    statistics = {
+
+    assert len(caplog.records) == 1
+    log_description, log_json = caplog.records[0].message.split("\n", maxsplit=1)
+    assert log_description.strip() == "Statistics:"
+    assert json.loads(log_json) == {
         "added_relations": {"meets_reversed": 1},
         "already_reversed_relations": {},
         "num_available_relations": 1,
         "num_added_relations": 1,
     }
-    assert reverse_relation_adder._statistics == statistics
-    reverse_relation_adder.show_statistics()
 
 
 def test_with_already_reversed_relations():
@@ -97,10 +106,11 @@ def test_with_already_reversed_relations():
     )
 
 
-def test_with_already_reversed_relations_allow():
+def test_with_already_reversed_relations_allow(caplog):
     reverse_relation_adder_with_allow_already_reversed_relations = ReversedRelationAdder(
         symmetric_relation_labels=[],
         allow_already_reversed_relations=True,
+        collect_statistics=True,
     )
 
     document = DocumentWithEntitiesAndRelations(text=TEXT1)
@@ -115,7 +125,11 @@ def test_with_already_reversed_relations_allow():
     )
 
     original_document = copy.deepcopy(document)
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+    reverse_relation_adder_with_allow_already_reversed_relations.enter_dataset(None)
     reverse_relation_adder_with_allow_already_reversed_relations(document)
+    reverse_relation_adder_with_allow_already_reversed_relations.exit_dataset(None)
 
     # Document contains two entities and two relations which are reverse of each other. After setting
     # allow_already_reversed_relations as True, we do not expect any new relation to be created.
@@ -127,13 +141,15 @@ def test_with_already_reversed_relations_allow():
     assert str(relations[0]) == str(original_relations[0])
     assert str(relations[1]) == str(original_relations[1])
 
-    statistics = {
+    assert len(caplog.records) == 1
+    log_description, log_json = caplog.records[0].message.split("\n", maxsplit=1)
+    assert log_description.strip() == "Statistics:"
+    assert json.loads(log_json) == {
         "added_relations": {},
         "already_reversed_relations": {"mother_of_reversed": 1, "son_of_reversed": 1},
         "num_available_relations": 2,
         "num_added_relations": 0,
     }
-    assert reverse_relation_adder_with_allow_already_reversed_relations._statistics == statistics
 
 
 def test_symmetric_relation():

@@ -4,16 +4,16 @@ import json
 import logging
 from collections import defaultdict
 
+from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation
 
-from pie_utils.statistics import WithStatistics
-
 from ..types import DocumentWithEntitiesAndRelations
+from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
 
-class ReversedRelationAdder(WithStatistics):
+class ReversedRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
     """ReversedRelationAdder adds binary relations to a document by reversing already existing
     relations in the document. Reversing of a relation is done by swapping head and tail span in a
     relation.
@@ -34,10 +34,12 @@ class ReversedRelationAdder(WithStatistics):
         label_suffix: str = "_reversed",
         symmetric_relation_labels: list[str] | None = None,
         allow_already_reversed_relations: bool = False,
+        collect_statistics: bool = False,
     ):
         self.symmetric_relation_labels = symmetric_relation_labels or []
         self.label_suffix = label_suffix
         self.allow_already_reversed_relations = allow_already_reversed_relations
+        self.collect_statistics = collect_statistics
         self.reset_statistics()
 
     def reset_statistics(self):
@@ -57,7 +59,8 @@ class ReversedRelationAdder(WithStatistics):
     ) -> DocumentWithEntitiesAndRelations:
         # get all relations before adding any reversed
         rels = list(document.relations)
-        self._statistics["num_available_relations"] += len(rels)
+        if self.collect_statistics:
+            self._statistics["num_available_relations"] += len(rels)
         available_relations = {(rel.head, rel.tail): rel for rel in rels}
         for rel in rels:
             new_label = (
@@ -72,7 +75,8 @@ class ReversedRelationAdder(WithStatistics):
                 # relation to the document but move on to the next relation otherwise we generate a LookupError
                 # exception.
                 if self.allow_already_reversed_relations:
-                    self._statistics["already_reversed_relations"][new_relation.label] += 1
+                    if self.collect_statistics:
+                        self._statistics["already_reversed_relations"][new_relation.label] += 1
                     continue
                 else:
                     raise LookupError(
@@ -81,7 +85,16 @@ class ReversedRelationAdder(WithStatistics):
                     )
             else:
                 document.relations.append(new_relation)
-                self._statistics["added_relations"][new_relation.label] += 1
-                self._statistics["num_added_relations"] += 1
+                if self.collect_statistics:
+                    self._statistics["added_relations"][new_relation.label] += 1
+                    self._statistics["num_added_relations"] += 1
 
         return document
+
+    def enter_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        if self.collect_statistics:
+            self.reset_statistics()
+
+    def exit_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        if self.collect_statistics:
+            self.show_statistics(description=name)

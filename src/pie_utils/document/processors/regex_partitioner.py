@@ -6,11 +6,11 @@ import re
 import statistics
 from typing import Any, Callable, Iterable, Iterator, Match
 
+from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import LabeledSpan
 
-from pie_utils.statistics import WithStatistics
-
 from ..types import DocumentWithPartitions
+from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ def _get_partitions_with_matcher(
         yield span
 
 
-class RegexPartitioner(WithStatistics):
+class RegexPartitioner(EnterDatasetMixin, ExitDatasetMixin):
     """RegexPartitioner partitions a document into multiple partitions using a regular expression.
     For more information, refer to get_partitions_with_matcher() method.
 
@@ -145,3 +145,11 @@ class RegexPartitioner(WithStatistics):
             self.update_statistics("document_lengths", len(document.text))
 
         return document
+
+    def enter_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        if self.collect_statistics:
+            self.reset_statistics()
+
+    def exit_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        if self.collect_statistics:
+            self.show_statistics(description=name)

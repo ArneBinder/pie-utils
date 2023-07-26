@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Optional, Union
 
 import datasets
 import pytest
@@ -12,6 +12,12 @@ from pytorch_ie.documents import TextBasedDocument
 
 from pie_utils import DatasetDict
 from pie_utils.dataset_dict import get_pie_dataset_type
+from pie_utils.document.processors.common import (
+    EnterDatasetDictMixin,
+    EnterDatasetMixin,
+    ExitDatasetDictMixin,
+    ExitDatasetMixin,
+)
 from tests import FIXTURES_ROOT
 
 logger = logging.getLogger(__name__)
@@ -179,6 +185,48 @@ def test_map_with_result_document_type(dataset_dict):
             assert isinstance(doc1, TextBasedDocument)
             assert isinstance(doc2, DocumentWithEntitiesAndRelations)
             assert doc1.text == doc2.text
+
+
+def test_map_with_context_manager(dataset_dict):
+    class DocumentCounter(
+        EnterDatasetMixin, ExitDatasetMixin, EnterDatasetDictMixin, ExitDatasetDictMixin
+    ):
+        def reset_statistics(self):
+            self.number = 0
+
+        def __call__(self, doc):
+            self.number += 1
+            return doc
+
+        def enter_dataset(
+            self, dataset: Union[Dataset, IterableDataset], name: Optional[str] = None
+        ) -> None:
+            self.reset_statistics()
+            self.split = name
+
+        def exit_dataset(
+            self, dataset: Union[Dataset, IterableDataset], name: Optional[str] = None
+        ) -> None:
+            self.all_docs[self.split] = self.number
+
+        def enter_dataset_dict(self, dataset_dict: DatasetDict) -> None:
+            self.all_docs = {}
+            self.split = None
+
+        def exit_dataset_dict(self, dataset_dict: DatasetDict) -> None:
+            logger.info(f"Number of documents per split: {self.all_docs}")
+
+    document_counter = DocumentCounter()
+    # note that we need to disable caching here, otherwise the __call__ method may not be called for any dataset split
+    dataset_dict_mapped = dataset_dict.map(function=document_counter, load_from_cache_file=False)
+    assert document_counter.all_docs == {"train": 3, "test": 3, "validation": 3}
+
+    # the document_counter should not have been modified the dataset
+    assert set(dataset_dict_mapped) == set(dataset_dict)
+    for split in dataset_dict:
+        assert len(dataset_dict_mapped[split]) == len(dataset_dict[split])
+        for doc1, doc2 in zip(dataset_dict_mapped[split], dataset_dict[split]):
+            assert doc1 == doc2
 
 
 def test_select(dataset_dict):
