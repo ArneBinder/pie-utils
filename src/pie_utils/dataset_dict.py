@@ -125,7 +125,7 @@ class DatasetDict(datasets.DatasetDict):
                 return x  # pragma: no cover
 
             func = identity
-        map_kwargs = dict(function=func, fn_kwargs=kwargs)
+        map_kwargs = dict(function=func, **kwargs)
         if result_document_type is not None:
             map_kwargs["result_document_type"] = resolve_target(result_document_type)
 
