@@ -12,7 +12,6 @@ class EnterDatasetMixin(ABC):
         self, dataset: Union[Dataset, IterableDataset], name: Optional[str] = None
     ) -> None:
         """Enter dataset context."""
-        ...
 
 
 class ExitDatasetMixin(ABC):
@@ -23,7 +22,6 @@ class ExitDatasetMixin(ABC):
         self, dataset: Union[Dataset, IterableDataset], name: Optional[str] = None
     ) -> None:
         """Exit dataset context."""
-        ...
 
 
 class EnterDatasetDictMixin(ABC):
@@ -32,7 +30,6 @@ class EnterDatasetDictMixin(ABC):
     @abstractmethod
     def enter_dataset_dict(self, dataset_dict) -> None:
         """Enter dataset dict context."""
-        ...
 
 
 class ExitDatasetDictMixin(ABC):
@@ -41,4 +38,3 @@ class ExitDatasetDictMixin(ABC):
     @abstractmethod
     def exit_dataset_dict(self, dataset_dict) -> None:
         """Exit dataset dict context."""
-        ...
