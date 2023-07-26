@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import logging
-import random
-from collections import defaultdict
-from typing import Any, Iterable, TypeVar
+from typing import TypeVar
 
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 from pytorch_ie.core import AnnotationList, Document
@@ -90,4 +88,3 @@ def trim_spans(
         relations.extend(new_relations)
 
     return document
-
