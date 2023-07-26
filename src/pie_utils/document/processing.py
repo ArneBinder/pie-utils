@@ -16,54 +16,6 @@ logger = logging.getLogger(__name__)
 D = TypeVar("D", bound=Document)
 
 
-def _remove_overlapping_entities(
-    entities: Iterable[dict[str, Any]], relations: Iterable[dict[str, Any]]
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    sorted_entities = sorted(entities, key=lambda span: span["start"])
-    entities_wo_overlap = []
-    skipped_entities = []
-    last_end = 0
-    for entity_dict in sorted_entities:
-        if entity_dict["start"] < last_end:
-            skipped_entities.append(entity_dict)
-        else:
-            entities_wo_overlap.append(entity_dict)
-            last_end = entity_dict["end"]
-    if len(skipped_entities) > 0:
-        logger.warning(f"skipped overlapping entities: {skipped_entities}")
-    valid_entity_ids = {entity_dict["_id"] for entity_dict in entities_wo_overlap}
-    valid_relations = [
-        relation_dict
-        for relation_dict in relations
-        if relation_dict["head"] in valid_entity_ids and relation_dict["tail"] in valid_entity_ids
-    ]
-    return entities_wo_overlap, valid_relations
-
-
-def remove_overlapping_entities(
-    doc: D,
-    entity_layer_name: str = "entities",
-    relation_layer_name: str = "relations",
-) -> D:
-    document_dict = doc.asdict()
-    entities_wo_overlap, valid_relations = _remove_overlapping_entities(
-        entities=document_dict[entity_layer_name]["annotations"],
-        relations=document_dict[relation_layer_name]["annotations"],
-    )
-
-    document_dict[entity_layer_name] = {
-        "annotations": entities_wo_overlap,
-        "predictions": [],
-    }
-    document_dict[relation_layer_name] = {
-        "annotations": valid_relations,
-        "predictions": [],
-    }
-    new_doc = type(doc).fromdict(document_dict)
-
-    return new_doc
-
-
 def trim_spans(
     document: D,
     span_layer: str,
