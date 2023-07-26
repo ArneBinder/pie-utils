@@ -105,6 +105,63 @@ def test_candidate_relation_adder(document1):
     assert relation.label == "no_relation"
 
 
+def test_candidate_relation_adder_use_predictions():
+    candidate_relation_adder = CandidateRelationAdder(
+        label="no_relation",
+        use_predictions=True,
+    )
+    TEXT1 = "Jane lives in Berlin. this is no sentence about Karl\n"
+    ENTITY_JANE_TEXT1 = LabeledSpan(start=0, end=4, label="person")
+    ENTITY_BERLIN_TEXT1 = LabeledSpan(start=14, end=20, label="city")
+    ENTITY_KARL_TEXT1 = LabeledSpan(start=48, end=52, label="person")
+    SENTENCE1_TEXT1 = LabeledSpan(start=0, end=21, label="sentence")
+    REL_JANE_LIVES_IN_BERLIN = BinaryRelation(
+        head=ENTITY_JANE_TEXT1, tail=ENTITY_BERLIN_TEXT1, label="lives_in"
+    )
+
+    document = DocumentWithEntitiesRelationsAndPartitions(text=TEXT1)
+    document.entities.predictions.extend(
+        [ENTITY_JANE_TEXT1, ENTITY_BERLIN_TEXT1, ENTITY_KARL_TEXT1]
+    )
+    document.relations.predictions.append(REL_JANE_LIVES_IN_BERLIN)
+    document.partitions.append(SENTENCE1_TEXT1)
+
+    original_document = copy.deepcopy(document)
+    document = candidate_relation_adder(document)
+    assert len(document) == 3
+
+    # Document contains three entities, therefore total number of relations would be 6. One relation was already
+    # available in the document, so 5 new relation candidates added.
+    original_document = original_document
+    entities = document.entities.predictions
+    assert len(entities) == 3
+    relations = document.relations.predictions
+    assert len(relations) == 6
+    original_relations = original_document.relations.predictions
+    assert len(original_relations) == 1
+    assert str(relations[0]) == str(original_relations[0])
+    relation = relations[1]
+    assert str(relation.head) == "Berlin"
+    assert str(relation.tail) == "Jane"
+    assert relation.label == "no_relation"
+    relation = relations[2]
+    assert str(relation.head) == "Berlin"
+    assert str(relation.tail) == "Karl"
+    assert relation.label == "no_relation"
+    relation = relations[3]
+    assert str(relation.head) == "Karl"
+    assert str(relation.tail) == "Berlin"
+    assert relation.label == "no_relation"
+    relation = relations[4]
+    assert str(relation.head) == "Jane"
+    assert str(relation.tail) == "Karl"
+    assert relation.label == "no_relation"
+    relation = relations[5]
+    assert str(relation.head) == "Karl"
+    assert str(relation.tail) == "Jane"
+    assert relation.label == "no_relation"
+
+
 @pytest.fixture(scope="module")
 def dataset_dict():
     return DatasetDict.from_json(
@@ -183,10 +240,10 @@ def test_candidate_relation_adder_without_sort_by_distance(document1):
     assert relation.label == "no_relation"
 
 
-def test_candidate_relation_adder_with_no_relation_upper_bound(document1):
+def test_candidate_relation_adder_with_n_max_factor(document1):
     candidate_relation_adder_with_no_relation_upper_bound = CandidateRelationAdder(
         label="no_relation",
-        added_relations_upper_bound_factor=3,
+        n_max_factor=3,
     )
 
     document = document1
@@ -216,10 +273,37 @@ def test_candidate_relation_adder_with_no_relation_upper_bound(document1):
     assert relation.label == "no_relation"
 
 
+def test_candidate_relation_adder_with_n_max(document1):
+    candidate_relation_adder = CandidateRelationAdder(n_max=3)
+
+    document = document1
+
+    original_document = copy.deepcopy(document)
+    document = candidate_relation_adder(document)
+    assert len(document) == 3
+
+    # Document contains three entities, therefore total number of relations would be 6. One relation was already
+    # available in the document, so 5 new relation candidates added.
+    original_document = original_document
+    entities = document.entities
+    assert len(entities) == 3
+    relations = document.relations
+    assert len(relations) == 4
+    original_relations = original_document.relations
+    assert len(original_relations) == 1
+    assert str(relations[0]) == str(original_relations[0])
+    relation = relations[1]
+    assert relation.label == "no_relation"
+    relation = relations[2]
+    assert relation.label == "no_relation"
+    relation = relations[3]
+    assert relation.label == "no_relation"
+
+
 def test_candidate_relation_adder_with_partitions(document2):
     candidate_relation_adder_with_partition = CandidateRelationAdder(
         label="no_relation",
-        use_partition=True,
+        partition_layer="partitions",
     )
 
     document = document2
@@ -248,7 +332,7 @@ def test_candidate_relation_adder_with_partitions_and_max_distance(document3):
     # the inner distance between arguments of a relation should be less than max_distance.
     candidate_relation_adder_with_partition_and_max_distance = CandidateRelationAdder(
         label="no_relation",
-        use_partition=True,
+        partition_layer="partitions",
         max_distance=8,
     )
 
