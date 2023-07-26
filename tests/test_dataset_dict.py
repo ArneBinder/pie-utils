@@ -187,14 +187,10 @@ def test_map_with_result_document_type(dataset_dict):
             assert doc1.text == doc2.text
 
 
-# TODO: this test fails sometimes because enter_dataset() gets executed after the map() call, fix this!
 def test_map_with_context_manager(dataset_dict):
     class DocumentCounter(
         EnterDatasetMixin, ExitDatasetMixin, EnterDatasetDictMixin, ExitDatasetDictMixin
     ):
-        def __init__(self):
-            self.reset_statistics()
-
         def reset_statistics(self):
             self.number = 0
 
@@ -205,13 +201,13 @@ def test_map_with_context_manager(dataset_dict):
         def enter_dataset(
             self, dataset: Union[Dataset, IterableDataset], name: Optional[str] = None
         ) -> None:
+            self.reset_statistics()
             self.split = name
 
         def exit_dataset(
             self, dataset: Union[Dataset, IterableDataset], name: Optional[str] = None
         ) -> None:
             self.all_docs[self.split] = self.number
-            self.reset_statistics()
 
         def enter_dataset_dict(self, dataset_dict: DatasetDict) -> None:
             self.all_docs = {}
@@ -221,7 +217,8 @@ def test_map_with_context_manager(dataset_dict):
             logger.info(f"Number of documents per split: {self.all_docs}")
 
     document_counter = DocumentCounter()
-    dataset_dict_mapped = dataset_dict.map(function=document_counter)
+    # note that we need to disable caching here, otherwise the __call__ method may not be called for any dataset split
+    dataset_dict_mapped = dataset_dict.map(function=document_counter, load_from_cache_file=False)
     assert document_counter.all_docs == {"train": 3, "test": 3, "validation": 3}
 
     # the document_counter should not have been modified the dataset
