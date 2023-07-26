@@ -33,10 +33,10 @@ def test_text_lengths_collector_with_partition():
     document.partitions.append(sentence2)
     assert str(sentence2) == sentence2_text
 
+    text_lengths_collector.enter_dataset(None)
     processed_document = text_lengths_collector(document)
     assert document == processed_document
     assert text_lengths_collector.text_lengths == [7, 9]
     assert text_lengths_collector.num_docs == 1
     assert text_lengths_collector.num_parts == 2
-
-    text_lengths_collector.show_statistics()
+    text_lengths_collector.exit_dataset(None)

@@ -4,15 +4,17 @@ import json
 import logging
 import statistics
 
+from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import Span
 from transformers import AutoTokenizer
 
 from ..types import DocumentWithPartitions
+from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
 
-class TextLengthsCollector:
+class TextLengthsCollector(EnterDatasetMixin, ExitDatasetMixin):
     """This document processor collects the text lengths in means of token numbers and allows to
     show them as json dict and, if plotext is installed, as histogram. Its nature is purely
     statistical, it does not modify the documents.
@@ -94,9 +96,8 @@ class TextLengthsCollector:
         self.num_docs += 1
         return document
 
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.show_statistics()
+    def enter_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
         self.reset_statistics()
+
+    def exit_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        self.show_statistics(description=name)

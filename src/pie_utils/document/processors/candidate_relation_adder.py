@@ -6,17 +6,19 @@ import random
 from collections import defaultdict
 from typing import Any, Dict, List
 
+from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation, Span
 from pytorch_ie.utils.span import is_contained_in
 
 from pie_utils.span.slice import distance
 
 from ..types import DocumentWithEntitiesRelationsAndPartitions
+from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
 
-class CandidateRelationAdder:
+class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
     """CandidateRelationAdder adds binary relations to a document based on various parameters. It
     goes through combinations of available entity pairs as possible candidates for new relations.
     Entity pairs which are already part of document as a relation are not added again.
@@ -212,10 +214,10 @@ class CandidateRelationAdder:
 
         return document
 
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def enter_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
         if self.collect_statistics:
-            self.show_statistics()
             self.reset_statistics()
+
+    def exit_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        if self.collect_statistics:
+            self.show_statistics(description=name)

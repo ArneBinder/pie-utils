@@ -4,14 +4,16 @@ import json
 import logging
 from collections import defaultdict
 
+from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation
 
 from ..types import DocumentWithEntitiesAndRelations
+from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
 
-class ReversedRelationAdder:
+class ReversedRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
     """ReversedRelationAdder adds binary relations to a document by reversing already existing
     relations in the document. Reversing of a relation is done by swapping head and tail span in a
     relation.
@@ -89,10 +91,10 @@ class ReversedRelationAdder:
 
         return document
 
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def enter_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
         if self.collect_statistics:
-            self.show_statistics()
             self.reset_statistics()
+
+    def exit_dataset(self, dataset: Dataset | IterableDataset, name: str | None = None) -> None:
+        if self.collect_statistics:
+            self.show_statistics(description=name)

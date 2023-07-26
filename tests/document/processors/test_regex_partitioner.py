@@ -1,3 +1,5 @@
+import json
+import logging
 import re
 
 import pytest
@@ -34,7 +36,7 @@ def test_regex_partitioner():
     assert str(partitions[3]) == "<end>Karl enjoys sunny days in Berlin."
 
 
-def test_regex_partitioner_with_statistics():
+def test_regex_partitioner_with_statistics(caplog):
     TEXT1 = (
         "This is initial text.<start>Jane lives in Berlin. this is no sentence about Karl."
         "<middle>Seattle is a rainy city. Jenny Durkan is the city's mayor."
@@ -53,34 +55,49 @@ def test_regex_partitioner_with_statistics():
     # The document contains a text separated by some markers like <start>, <middle> and <end>. After partitioning, there
     # are three partitions excluding initial part. Therefore, document length is not be equal to sum of partitions.
     document = DocumentWithPartitions(text=TEXT1)
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+    regex_partitioner.enter_dataset(None)
     new_document = regex_partitioner(document)
+    regex_partitioner.exit_dataset(None)
     partitions = new_document.partitions
     assert len(partitions) == 3
-    partition_lengths = regex_partitioner._statistics["partition_lengths"]
-    assert partition_lengths == [60, 66, 38]
-    num_partitions = regex_partitioner._statistics["num_partitions"]
-    assert num_partitions == [3]
-    document_lengths = regex_partitioner._statistics["document_lengths"]
-    assert document_lengths == [len(TEXT1)]
-    # Sum of partition length should be less than document length since initial partition is excluded.
-    assert sum(partition_lengths) < sum(document_lengths)
+
+    assert len(caplog.records) == 1
+    log_description, log_json = caplog.records[0].message.split("\n", maxsplit=1)
+    assert log_description.strip() == "Statistics:"
+    assert json.loads(log_json) == {
+        "partition_lengths": {
+            "min": 38,
+            "max": 66,
+            "mean": 54.666666666666664,
+            "stddev": 12.036980056845191,
+        },
+        "num_partitions": {"min": 3, "max": 3, "mean": 3, "stddev": 0.0},
+        "document_lengths": {"min": 185, "max": 185, "mean": 185, "stddev": 0.0},
+    }
 
     # The document contains a text separated by some markers like <start> and <end>. RegexPartitioner appends statistics
     # from each document, therefore statistics contains information from previous document as well. After partitioning,
     # there are two partitions excluding initial part. Therefore, the sum of document lengths is not be equal to sum of
     # partitions.
     document = DocumentWithPartitions(text=TEXT2)
+    caplog.set_level(logging.INFO)
+    caplog.clear()
+    regex_partitioner.enter_dataset(None)
     new_document = regex_partitioner(document)
+    regex_partitioner.exit_dataset(None)
     partitions = new_document.partitions
     assert len(partitions) == 2
-    partition_lengths = regex_partitioner._statistics["partition_lengths"]
-    assert partition_lengths == [60, 66, 38, 31, 22]
-    num_partitions = regex_partitioner._statistics["num_partitions"]
-    assert num_partitions == [3, 2]
-    document_lengths = regex_partitioner._statistics["document_lengths"]
-    assert document_lengths == [len(TEXT1), len(TEXT2)]
-    # Sum of partition length should be less than document length since initial partition is excluded.
-    assert sum(partition_lengths) < sum(document_lengths)
+
+    assert len(caplog.records) == 1
+    log_description, log_json = caplog.records[0].message.split("\n", maxsplit=1)
+    assert log_description.strip() == "Statistics:"
+    assert json.loads(log_json) == {
+        "partition_lengths": {"min": 22, "max": 31, "mean": 26.5, "stddev": 4.5},
+        "num_partitions": {"min": 2, "max": 2, "mean": 2, "stddev": 0.0},
+        "document_lengths": {"min": 74, "max": 74, "mean": 74, "stddev": 0.0},
+    }
 
     with pytest.raises(
         TypeError,
