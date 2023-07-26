@@ -94,48 +94,6 @@ def trim_spans(
     return document
 
 
-def add_reversed_relations(
-    document: D,
-    relation_layer: str = "relations",
-    symmetric_relation_labels: list[str] | None = None,
-    label_suffix: str = "_reversed",
-    allow_already_reversed_relations: bool = False,
-    use_predictions: bool = False,
-    inplace: bool = False,
-) -> D:
-    if not inplace:
-        document = type(document).fromdict(document.asdict())
-    symmetric_relation_labels = symmetric_relation_labels or []
-
-    rel_layer = document[relation_layer]
-    if use_predictions:
-        rel_layer = rel_layer.predictions
-
-    # get all relations before adding any reversed
-    available_relations = {(rel.head, rel.tail): rel for rel in rel_layer}
-    for rel in list(rel_layer):
-        new_label = (
-            rel.label if rel.label in symmetric_relation_labels else f"{rel.label}{label_suffix}"
-        )
-        new_relation = BinaryRelation(label=new_label, head=rel.tail, tail=rel.head)
-        if (new_relation.head, new_relation.tail) in available_relations:
-            # If an entity pair of reversed relation is present in the available relations then we check if we want
-            # to allow already existing reversed relations or not. If we allow then we do not add the reversed
-            # relation to the document but move on to the next relation otherwise we generate a LookupError
-            # exception.
-            if allow_already_reversed_relations:
-                continue
-            else:
-                raise LookupError(
-                    f"Entity pair of new relation ({new_relation}) already belongs to a relation: "
-                    f"{available_relations[(new_relation.head, new_relation.tail)]}"
-                )
-        else:
-            rel_layer.append(new_relation)
-
-    return document
-
-
 def get_single_target_layer(document: Document, layer: AnnotationList):
     if len(layer._targets) != 1:
         raise Exception(
