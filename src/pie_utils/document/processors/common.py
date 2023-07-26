@@ -1,10 +1,10 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 from pytorch_ie import Dataset, IterableDataset
 
 
-class EnterDatasetMixin:
+class EnterDatasetMixin(ABC):
     """Mixin for processors that enter a dataset context."""
 
     @abstractmethod
@@ -15,7 +15,7 @@ class EnterDatasetMixin:
         ...
 
 
-class ExitDatasetMixin:
+class ExitDatasetMixin(ABC):
     """Mixin for processors that exit a dataset context."""
 
     @abstractmethod
@@ -26,7 +26,7 @@ class ExitDatasetMixin:
         ...
 
 
-class EnterDatasetDictMixin:
+class EnterDatasetDictMixin(ABC):
     """Mixin for processors that enter a dataset dict context."""
 
     @abstractmethod
@@ -35,7 +35,7 @@ class EnterDatasetDictMixin:
         ...
 
 
-class ExitDatasetDictMixin:
+class ExitDatasetDictMixin(ABC):
     """Mixin for processors that exit a dataset dict context."""
 
     @abstractmethod
