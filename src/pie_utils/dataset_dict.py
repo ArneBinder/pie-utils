@@ -143,7 +143,7 @@ class DatasetDict(datasets.DatasetDict):
         result = type(self)(result_dict)
 
         if isinstance(func, ExitDatasetDictMixin):
-            func.exit_dataset_dict(self)
+            func.exit_dataset_dict(result)
 
         return result
 
