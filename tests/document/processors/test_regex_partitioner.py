@@ -315,11 +315,10 @@ def test_get_partitions_with_matcher():
     # which returns non overlapping match from the text. Therefore, none of the partition created should have overlapped
     # span and all of them should be instances of LabeledSpan.
     document = DocumentWithPartitions(text=TEXT1)
-    matcher = re.compile("(<start>|<middle>|<end>)").finditer
     partitions = []
     for partition in _get_partitions_with_matcher(
-        document=document,
-        matcher=matcher,
+        text=document.text,
+        matcher_or_pattern="(<start>|<middle>|<end>)",
         label_group_id=0,
         label_whitelist=["<start>", "<middle>", "<end>"],
     ):

@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 import random
-import re
 from collections import defaultdict
-from typing import Any, Callable, Iterable, Iterator, Match, TypeVar
+from typing import Any, Iterable, TypeVar
 
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 from pytorch_ie.core import AnnotationList, Document
@@ -15,94 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 D = TypeVar("D", bound=Document)
-
-
-def create_regex_matcher(pattern):
-    return re.compile(pattern).finditer
-
-
-def _get_partitions_with_matcher(
-    text: str,
-    matcher_or_pattern: Callable[[str], Iterable[Match]] | str,
-    label_group_id: int | None = None,  # = 1,
-    label_whitelist: list[str] | None = None,
-    skip_initial_partition: bool = False,  # = True
-    default_partition_label: str = "partition",
-    initial_partition_label: str | None = None,
-) -> Iterator[LabeledSpan]:
-    """This method yields LabeledSpans as partitions of the given text. matcher is used to search
-    for a pattern in the text. If the pattern is found, it returns a Match object that contains
-    matched groups. A partition is then created using a span in the matched groups. The span of a
-    partition starts from the first match (inclusive) and ends at the next match (exclusive) or at
-    the end of the text. A partition is labeled either using the default_partition_label or using
-    the list of labels available in label_whitelist. It should be noted that none of the partitions
-    overlap.
-
-    :param text: A text that is to be partitioned
-    :param matcher_or_pattern: A method or a string. In the former case, that method is used to
-        find a pattern in the text and return an iterator yielding the Match objects, e.g.
-        re.compile(PATTERN).finditer. In the latter, the string is used as a pattern to find the
-        matches in the text.
-    :param label_group_id: An integer value (default:None) to select the desired match group from
-        the Match object. This match group is then used to create a label for the partition.
-    :param label_whitelist: An optional list of labels (default:None) which are allowed to form a
-        partition if label_group_id is not None. label_whitelist is the whitelist for the labels
-        created using label_group_id. If label_whitelist is None, then all the labels created using
-        label_group_id will form a partition.
-    :param skip_initial_partition: A boolean value (default:False) that prevents the initial
-        partition to be saved.
-    :param default_partition_label: A string value (default:partition) to be used as the default
-        label for the parts if no label_group_id for the match object is provided.
-    :param initial_partition_label: A string value (default:None) to be used as a label for the
-        initial partition. This is only used when skip_initial_partition is False. If it is None
-        then default_partition_label is used as initial_partition_label.
-    """
-    if isinstance(matcher_or_pattern, str):
-        matcher = create_regex_matcher(matcher_or_pattern)
-    else:
-        matcher = matcher_or_pattern
-    if initial_partition_label is None:
-        initial_partition_label = default_partition_label
-    previous_start = previous_label = None
-    if not skip_initial_partition:
-        if label_whitelist is None or initial_partition_label in label_whitelist:
-            previous_start = 0
-            previous_label = initial_partition_label
-    for match in matcher(text):
-        if label_group_id is not None:
-            start = match.start(label_group_id)
-            end = match.end(label_group_id)
-            label = text[start:end]
-        else:
-            label = default_partition_label
-        if label_whitelist is None or label in label_whitelist:
-            if previous_start is not None and previous_label is not None:
-                end = match.start()
-                span = LabeledSpan(start=previous_start, end=end, label=previous_label)
-                yield span
-
-            previous_start = match.start()
-            previous_label = label
-
-    if previous_start is not None and previous_label is not None:
-        end = len(text)
-        span = LabeledSpan(start=previous_start, end=end, label=previous_label)
-        yield span
-
-
-def add_partitions_with_regex(
-    doc: D,
-    text_field_name: str = "text",
-    partition_layer_name: str = "partitions",
-    inplace: bool = False,
-    **partition_kwargs,
-) -> D:
-    if not inplace:
-        doc = type(doc).fromdict(doc.asdict())
-    text: str = getattr(doc, text_field_name)
-    partition_annotations = list(_get_partitions_with_matcher(text=text, **partition_kwargs))
-    doc[partition_layer_name].extend(partition_annotations)
-    return doc
 
 
 def _remove_overlapping_entities(

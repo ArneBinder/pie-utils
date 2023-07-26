@@ -4,37 +4,46 @@ import json
 import logging
 import re
 import statistics
-from typing import Any, Callable, Iterable, Iterator, Match
+from typing import Any, Callable, Iterable, Iterator, Match, TypeVar
 
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import LabeledSpan
+from pytorch_ie.documents import TextBasedDocument
 
-from ..types import DocumentWithPartitions
 from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
 
+D = TypeVar("D", bound=TextBasedDocument)
+
+
+def create_regex_matcher(pattern):
+    return re.compile(pattern).finditer
+
+
 def _get_partitions_with_matcher(
-    document: DocumentWithPartitions,
-    matcher: Callable[[str], Iterable[Match]],
+    text: str,
+    matcher_or_pattern: Callable[[str], Iterable[Match]] | str,
     label_group_id: int | None = None,  # = 1,
     label_whitelist: list[str] | None = None,
     skip_initial_partition: bool = False,  # = True
     default_partition_label: str = "partition",
     initial_partition_label: str | None = None,
 ) -> Iterator[LabeledSpan]:
-    """This method yields LabeledSpans as partitions of the given document. matcher is used to
-    search for a pattern in the document. If the pattern is found, it returns a Match object that
-    contains matched groups. A partition is then created using a span in the matched groups. The
-    span of a partition starts from the first match (inclusive) and ends at the next match
-    (exclusive) or at the end of the document. A partition is labeled either using the
-    default_partition_label or using the list of labels available in label_whitelist. It should be
-    noted that none of the partitions overlap.
+    """This method yields LabeledSpans as partitions of the given text. matcher is used to search
+    for a pattern in the text. If the pattern is found, it returns a Match object that contains
+    matched groups. A partition is then created using a span in the matched groups. The span of a
+    partition starts from the first match (inclusive) and ends at the next match (exclusive) or at
+    the end of the text. A partition is labeled either using the default_partition_label or using
+    the list of labels available in label_whitelist. It should be noted that none of the partitions
+    overlap.
 
-    :param document: A Document that is to be partitioned
-    :param matcher: A method that is used to find a pattern in the document text and return an
-        iterator yielding the Match objects, e.g. re.compile(PATTERN).finditer
+    :param text: A text that is to be partitioned
+    :param matcher_or_pattern: A method or a string. In the former case, that method is used to
+        find a pattern in the text and return an iterator yielding the Match objects, e.g.
+        re.compile(PATTERN).finditer. In the latter, the string is used as a pattern to find the
+        matches in the text.
     :param label_group_id: An integer value (default:None) to select the desired match group from
         the Match object. This match group is then used to create a label for the partition.
     :param label_whitelist: An optional list of labels (default:None) which are allowed to form a
@@ -42,13 +51,17 @@ def _get_partitions_with_matcher(
         created using label_group_id. If label_whitelist is None, then all the labels created using
         label_group_id will form a partition.
     :param skip_initial_partition: A boolean value (default:False) that prevents the initial
-        partition to be saved in the document.
+        partition to be saved.
     :param default_partition_label: A string value (default:partition) to be used as the default
         label for the parts if no label_group_id for the match object is provided.
     :param initial_partition_label: A string value (default:None) to be used as a label for the
         initial partition. This is only used when skip_initial_partition is False. If it is None
         then default_partition_label is used as initial_partition_label.
     """
+    if isinstance(matcher_or_pattern, str):
+        matcher = create_regex_matcher(matcher_or_pattern)
+    else:
+        matcher = matcher_or_pattern
     if initial_partition_label is None:
         initial_partition_label = default_partition_label
     previous_start = previous_label = None
@@ -56,11 +69,11 @@ def _get_partitions_with_matcher(
         if label_whitelist is None or initial_partition_label in label_whitelist:
             previous_start = 0
             previous_label = initial_partition_label
-    for match in matcher(document.text):
+    for match in matcher(text):
         if label_group_id is not None:
             start = match.start(label_group_id)
             end = match.end(label_group_id)
-            label = document.text[start:end]
+            label = text[start:end]
         else:
             label = default_partition_label
         if label_whitelist is None or label in label_whitelist:
@@ -73,7 +86,7 @@ def _get_partitions_with_matcher(
             previous_label = label
 
     if previous_start is not None and previous_label is not None:
-        end = len(document.text)
+        end = len(text)
         span = LabeledSpan(start=previous_start, end=end, label=previous_label)
         yield span
 
@@ -93,8 +106,17 @@ class RegexPartitioner(EnterDatasetMixin, ExitDatasetMixin):
     :param partitioner_kwargs: keyword arguments for get_partitions_with_matcher() method
     """
 
-    def __init__(self, pattern: str, collect_statistics: bool = False, **partitioner_kwargs):
-        self.matcher = re.compile(pattern).finditer
+    def __init__(
+        self,
+        pattern: str,
+        collect_statistics: bool = False,
+        partition_layer_name: str = "partitions",
+        text_field_name: str = "text",
+        **partitioner_kwargs,
+    ):
+        self.matcher = create_regex_matcher(pattern)
+        self.partition_layer_name = partition_layer_name
+        self.text_field_name = text_field_name
         self.collect_statistics = collect_statistics
         self.reset_statistics()
         self.partitioner_kwargs = partitioner_kwargs
@@ -131,18 +153,19 @@ class RegexPartitioner(EnterDatasetMixin, ExitDatasetMixin):
                     f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
                 )
 
-    def __call__(self, document: DocumentWithPartitions):
+    def __call__(self, document: D) -> D:
         partition_lengths = []
+        text: str = getattr(document, self.text_field_name)
         for partition in _get_partitions_with_matcher(
-            document, matcher=self.matcher, **self.partitioner_kwargs
+            text=text, matcher_or_pattern=self.matcher, **self.partitioner_kwargs
         ):
-            document.partitions.append(partition)
+            document[self.partition_layer_name].append(partition)
             partition_lengths.append(partition.end - partition.start)
 
         if self.collect_statistics:
-            self.update_statistics("num_partitions", len(document.partitions))
+            self.update_statistics("num_partitions", len(document[self.partition_layer_name]))
             self.update_statistics("partition_lengths", partition_lengths)
-            self.update_statistics("document_lengths", len(document.text))
+            self.update_statistics("document_lengths", len(text))
 
         return document
 
