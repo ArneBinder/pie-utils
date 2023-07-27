@@ -3,15 +3,19 @@ from __future__ import annotations
 import json
 import logging
 import statistics
+from typing import TypeVar
 
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import Span
+from pytorch_ie.core import Document
 from transformers import AutoTokenizer
 
-from ..types import DocumentWithPartitions
 from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
+
+
+D = TypeVar("D", bound=Document)
 
 
 class TextLengthsCollector(EnterDatasetMixin, ExitDatasetMixin):
@@ -22,10 +26,10 @@ class TextLengthsCollector(EnterDatasetMixin, ExitDatasetMixin):
     Presented values:
      * min, max, mean, and stddev of the collected text lengths,
      * num_docs (number of processed documents), and
-     * if use_partition is enabled, num_parts (number of precessed parts)
+     * if partition_layer is available, num_parts (number of precessed parts)
 
     :param tokenizer_name_or_path the identifier of the Huggingface tokenizer that will be used
-    :param use_partition a boolean flag to enable considering a partition, i.e. tokenize and
+    :param partition_layer a string that, if provided, enables considering a partition, i.e. tokenize and
         collect the lengths for the partition entries (e.g. sentences or sections) individually.
     :param tokenizer_kwargs a dictionary containing further keyword arguments passed when calling
         the tokenizer
@@ -36,11 +40,11 @@ class TextLengthsCollector(EnterDatasetMixin, ExitDatasetMixin):
     def __init__(
         self,
         tokenizer_name_or_path: str,
-        use_partition: bool | None = False,
+        partition_layer: str | None = None,
         tokenizer_kwargs: dict | None = None,
         plotext_kwargs: dict | None = None,
     ):
-        self.use_partition = use_partition
+        self.partition_layer = partition_layer
         self.tokenizer_name_or_path = tokenizer_name_or_path
         self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name_or_path)
         self.tokenizer_kwargs = tokenizer_kwargs or {}
@@ -60,7 +64,7 @@ class TextLengthsCollector(EnterDatasetMixin, ExitDatasetMixin):
             "stddev": statistics.pstdev(self.text_lengths),
             "num_docs": self.num_docs,
         }
-        if self.use_partition:
+        if self.partition_layer is not None:
             result["num_parts"] = self.num_parts
         return result
 
@@ -83,9 +87,11 @@ class TextLengthsCollector(EnterDatasetMixin, ExitDatasetMixin):
         stats = self.get_statistics()
         logger.info(f"{caption}):\n{json.dumps(stats, indent=2)}")
 
-    def __call__(self, document: DocumentWithPartitions) -> DocumentWithPartitions:
+    def __call__(self, document: D) -> D:
         partition = (
-            document.partitions if self.use_partition else [Span(start=0, end=len(document.text))]
+            document[self.partition_layer]
+            if self.partition_layer is not None
+            else [Span(start=0, end=len(document.text))]
         )
         tokenized = self.tokenizer(
             [document.text[part.start : part.end] for part in partition], **self.tokenizer_kwargs
