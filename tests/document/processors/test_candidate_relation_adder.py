@@ -375,5 +375,5 @@ def test_rel_layer_with_multiple_target_layers():
         assert (
             e.value
             == "Relation layer must have exactly one target layer but found the following target layers: "
-               "['entities1', 'entities2']"
+            "['entities1', 'entities2']"
         )
