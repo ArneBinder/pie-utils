@@ -3,14 +3,18 @@ from __future__ import annotations
 import json
 import logging
 from collections import defaultdict
+from typing import TypeVar
 
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation
+from pytorch_ie.core import Document
 
-from ..types import DocumentWithEntitiesAndRelations
 from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
+
+
+D = TypeVar("D", bound=Document)
 
 
 class ReversedRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
@@ -31,13 +35,17 @@ class ReversedRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
 
     def __init__(
         self,
+        relation_layer: str = "relations",
         label_suffix: str = "_reversed",
         symmetric_relation_labels: list[str] | None = None,
         allow_already_reversed_relations: bool = False,
+        use_predictions: bool = False,
         collect_statistics: bool = False,
     ):
         self.symmetric_relation_labels = symmetric_relation_labels or []
         self.label_suffix = label_suffix
+        self.relation_layer = relation_layer
+        self.use_predictions = use_predictions
         self.allow_already_reversed_relations = allow_already_reversed_relations
         self.collect_statistics = collect_statistics
         self.reset_statistics()
@@ -54,11 +62,12 @@ class ReversedRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
         description = description or "Statistics"
         logger.info(f"{description}:\n{json.dumps(dict(self._statistics))}")
 
-    def __call__(
-        self, document: DocumentWithEntitiesAndRelations
-    ) -> DocumentWithEntitiesAndRelations:
+    def __call__(self, document: D) -> D:
         # get all relations before adding any reversed
-        rels = list(document.relations)
+        rel_layer = document[self.relation_layer]
+        if self.use_predictions:
+            rel_layer = rel_layer.predictions
+        rels = list(rel_layer)
         if self.collect_statistics:
             self._statistics["num_available_relations"] += len(rels)
         available_relations = {(rel.head, rel.tail): rel for rel in rels}
@@ -84,7 +93,7 @@ class ReversedRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
                         f"{available_relations[(new_relation.head, new_relation.tail)]}"
                     )
             else:
-                document.relations.append(new_relation)
+                rel_layer.append(new_relation)
                 if self.collect_statistics:
                     self._statistics["added_relations"][new_relation.label] += 1
                     self._statistics["num_added_relations"] += 1

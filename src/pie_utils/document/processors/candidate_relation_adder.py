@@ -4,18 +4,28 @@ import json
 import logging
 import random
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar
 
 from pytorch_ie import Dataset, IterableDataset
-from pytorch_ie.annotations import BinaryRelation, Span
+from pytorch_ie.annotations import BinaryRelation
+from pytorch_ie.core import AnnotationList, Document
+from pytorch_ie.core.document import BaseAnnotationList
 from pytorch_ie.utils.span import is_contained_in
 
+from pie_utils.document.processors.common import EnterDatasetMixin, ExitDatasetMixin
 from pie_utils.span.slice import distance
 
-from ..types import DocumentWithEntitiesRelationsAndPartitions
-from .common import EnterDatasetMixin, ExitDatasetMixin
-
 logger = logging.getLogger(__name__)
+
+D = TypeVar("D", bound=Document)
+
+
+def target_layers(layer: BaseAnnotationList) -> dict[str, AnnotationList]:
+    return {
+        target_layer_name: layer._document[target_layer_name]
+        for target_layer_name in layer._targets
+        if target_layer_name in layer._document
+    }
 
 
 class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
@@ -72,20 +82,27 @@ class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
     def __init__(
         self,
         label: str = "no_relation",
-        use_partition: bool | None = False,
+        relation_layer: str = "relations",
+        use_predictions: bool = False,
+        partition_layer: str | None = None,
         max_distance: int | None = None,
         distance_type: str = "inner",
-        added_relations_upper_bound_factor: int | None = None,
         sort_by_distance: bool = True,
+        n_max: int | None = None,
+        # this should not be used during prediction, because it will leak gold relation information!
+        n_max_factor: float | None = None,
         collect_statistics: bool = False,
     ):
         self.label = label
-        self.use_partition = use_partition
+        self.relation_layer = relation_layer
+        self.use_predictions = use_predictions
+        self.partition_layer = partition_layer
         self.max_distance = max_distance
         self.distance_type = distance_type
-        self.added_rels_upper_bound_factor = added_relations_upper_bound_factor
         self.collect_statistics = collect_statistics
         self.sort_by_distance = sort_by_distance
+        self.n_max = n_max
+        self.n_max_factor = n_max_factor
         self.reset_statistics()
 
     def reset_statistics(self):
@@ -122,27 +139,41 @@ class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
                     f"type of given key [{type(key)}] or value [{type(value)}] is incorrect."
                 )
 
-    def __call__(
-        self,
-        document: DocumentWithEntitiesRelationsAndPartitions,
-    ) -> DocumentWithEntitiesRelationsAndPartitions:
-        available_relations = document.relations
-        available_relation_mapping = {(rel.head, rel.tail): rel for rel in available_relations}
-        if self.use_partition:
-            available_partitions = document.partitions
+    def __call__(self, document: D) -> D:
+        rel_layer = document[self.relation_layer]
+        if self.use_predictions:
+            rel_layer = rel_layer.predictions
+
+        available_relation_mapping = {(rel.head, rel.tail): rel for rel in rel_layer}
+        if self.partition_layer is not None:
+            available_partitions = document[self.partition_layer]
         else:
-            available_partitions = [Span(start=0, end=len(document.text))]
-        entities = document.entities
+            available_partitions = [None]
+        rel_target_layers = target_layers(layer=rel_layer)
+        if not len(rel_target_layers) == 1:
+            raise ValueError(
+                f"Relation layer must have exactly one target layer but found the following target layers: "
+                f"{list(rel_target_layers)}"
+            )
+        entity_layer = list(rel_target_layers.values())[0]
+        if self.use_predictions:
+            entity_layer = entity_layer.predictions
+
         candidates_with_distance = {}
         distances_taken = defaultdict(list)
         num_relations_in_partition = 0
         available_rels_within_allowed_distance = set()
         for partition in available_partitions:
-            available_entities = [
-                entity
-                for entity in entities
-                if is_contained_in((entity.start, entity.end), (partition.start, partition.end))
-            ]
+            if partition is not None:
+                available_entities = [
+                    entity
+                    for entity in entity_layer
+                    if is_contained_in(
+                        (entity.start, entity.end), (partition.start, partition.end)
+                    )
+                ]
+            else:
+                available_entities = list(entity_layer)
             for head in available_entities:
                 for tail in available_entities:
                     if head == tail:
@@ -170,20 +201,18 @@ class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
             candidates_with_distance_list = list(candidates_with_distance.items())
             random.shuffle(candidates_with_distance_list)
         n_added = 0
-        num_total_candidates = len(entities) * len(entities) - len(entities)
+        if self.n_max is not None:
+            candidates_with_distance_list = candidates_with_distance_list[: self.n_max]
+        if self.n_max_factor is not None:
+            n_max_by_factor = int(len(rel_layer) * self.n_max_factor)
+            candidates_with_distance_list = candidates_with_distance_list[:n_max_by_factor]
+        num_total_candidates = len(entity_layer) * len(entity_layer) - len(entity_layer)
         self.update_statistics("num_total_relation_candidates", num_total_candidates)
-        num_available_relations = len(available_relations)
+        num_available_relations = len(rel_layer)
         self.update_statistics("num_available_relations", num_available_relations)
         for (head, tail), d in candidates_with_distance_list:
-            if self.added_rels_upper_bound_factor is not None and num_relations_in_partition > 0:
-                num_added_relation = n_added + 1
-                if num_added_relation > min(
-                    num_available_relations * self.added_rels_upper_bound_factor,
-                    num_total_candidates,
-                ):
-                    break
             new_relation = BinaryRelation(label=self.label, head=head, tail=tail)
-            document.relations.append(new_relation)
+            rel_layer.append(new_relation)
             distances_taken[self.label].append(d)
             n_added += 1
 

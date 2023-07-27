@@ -80,6 +80,34 @@ def test_reversed_relation(caplog):
     }
 
 
+def test_reversed_relation_prediction():
+    reverse_relation_adder = ReversedRelationAdder(
+        symmetric_relation_labels=[],
+        use_predictions=True,
+    )
+
+    document = DocumentWithEntitiesAndRelations(text=TEXT3)
+    jamie = ENTITY_JAMIE_TEXT3.copy()
+    john = ENTITY_JOHN_TEXT3.copy()
+    document.entities.extend([jamie, john])
+    document.relations.predictions.append(REL_JAMIE_MEETS_JOHN.copy(head=jamie, tail=john))
+
+    original_document = copy.deepcopy(document)
+    reverse_relation_adder(document)
+
+    # Document contains two entities and one relation. One reverse relation will be created resulting in total two
+    # relations.
+    relations = document.relations.predictions
+    assert len(relations) == 2
+    original_relations = original_document.relations.predictions
+    assert len(original_relations) == 1
+    assert str(relations[0]) == str(original_relations[0])
+    relation = relations[1]
+    assert str(relation.head) == str(john)
+    assert str(relation.tail) == str(jamie)
+    assert relation.label == "meets_reversed"
+
+
 def test_with_already_reversed_relations():
     # since allow_already_reversed_relations is False by default and document contains reversed relations, it will
     # generate LookupError exception.
