@@ -9,11 +9,9 @@ from pytorch_ie.core import AnnotationList, annotation_field
 from pytorch_ie.documents import TextDocument
 
 from pie_utils import DatasetDict
-from pie_utils.document import (
-    CandidateRelationAdder,
-    DocumentWithEntitiesRelationsAndPartitions,
-)
+from pie_utils.document.processors import CandidateRelationAdder
 from tests import FIXTURES_ROOT
+from tests.document.processors.common import DocumentWithEntitiesRelationsAndPartitions
 
 
 @pytest.fixture

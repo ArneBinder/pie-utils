@@ -5,7 +5,8 @@ import logging
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 
-from pie_utils.document import DocumentWithEntitiesAndRelations, ReversedRelationAdder
+from pie_utils.document.processors import ReversedRelationAdder
+from tests.document.processors.common import DocumentWithEntitiesAndRelations
 
 TEXT1 = "Lily is mother of Harry."
 TEXT2 = "Beth greets Emma."
