@@ -356,3 +356,24 @@ def test_candidate_relation_adder_with_partitions_and_max_distance(document3):
     assert len(original_relations) == 0
     partition = document.partitions
     assert len(partition) == 1
+
+
+def test_rel_layer_with_multiple_target_layers():
+    @dataclass
+    class MyDocument(TextDocument):
+        entities1: AnnotationList[LabeledSpan] = annotation_field(target="text")
+        entities2: AnnotationList[LabeledSpan] = annotation_field(target="text")
+        relations: AnnotationList[BinaryRelation] = annotation_field(
+            targets=["entities1", "entities2"]
+        )
+
+    candidate_relation_adder = CandidateRelationAdder(relation_layer="relations")
+
+    document = MyDocument(text="Hello world!")
+    with pytest.raises(ValueError) as e:
+        candidate_relation_adder(document)
+        assert (
+            e.value
+            == "Relation layer must have exactly one target layer but found the following target layers: "
+               "['entities1', 'entities2']"
+        )

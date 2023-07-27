@@ -150,6 +150,11 @@ class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
         else:
             available_partitions = [None]
         rel_target_layers = target_layers(layer=rel_layer)
+        if not len(rel_target_layers) == 1:
+            raise ValueError(
+                f"Relation layer must have exactly one target layer but found the following target layers: "
+                f"{list(rel_target_layers)}"
+            )
         entity_layer = list(rel_target_layers.values())[0]
         if self.use_predictions:
             entity_layer = entity_layer.predictions
