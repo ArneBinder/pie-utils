@@ -19,7 +19,7 @@ def test_text_lengths_collector():
 def test_text_lengths_collector_with_partition():
     text_lengths_collector = TextLengthsCollector(
         tokenizer_name_or_path="bert-base-uncased",
-        use_partition=True,
+        partition_layer="partitions",
     )
     document = DocumentWithPartitions(
         text="Jane lives in Berlin. This is a sentence about Karl.\n"
