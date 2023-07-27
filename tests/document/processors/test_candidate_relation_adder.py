@@ -1,9 +1,12 @@
 import copy
 import json
 import logging
+from dataclasses import dataclass
 
 import pytest
 from pytorch_ie.annotations import BinaryRelation, LabeledSpan
+from pytorch_ie.core import AnnotationList, annotation_field
+from pytorch_ie.documents import TextDocument
 
 from pie_utils import DatasetDict
 from pie_utils.document import (
