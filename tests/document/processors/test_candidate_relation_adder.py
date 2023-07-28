@@ -8,9 +8,7 @@ from pytorch_ie.annotations import BinaryRelation, LabeledSpan
 from pytorch_ie.core import AnnotationList, annotation_field
 from pytorch_ie.documents import TextDocument
 
-from pie_utils import DatasetDict
 from pie_utils.document.processors import CandidateRelationAdder
-from tests import FIXTURES_ROOT
 from tests.document.processors.common import DocumentWithEntitiesRelationsAndPartitions
 
 
@@ -163,15 +161,7 @@ def test_candidate_relation_adder_use_predictions():
     assert relation.label == "no_relation"
 
 
-@pytest.fixture(scope="module")
-def dataset_dict():
-    return DatasetDict.from_json(
-        data_dir=FIXTURES_ROOT / "dataset_dict" / "conll2003_extract",
-        document_type=DocumentWithEntitiesRelationsAndPartitions,
-    )
-
-
-def test_candidate_relation_adder_with_statistics(document1, dataset_dict, caplog):
+def test_candidate_relation_adder_with_statistics(document1, caplog):
     candidate_relation_adder_with_statistics = CandidateRelationAdder(
         label="no_relation",
         collect_statistics=True,

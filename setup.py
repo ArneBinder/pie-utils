@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 REQUIRED_PKGS = [
-    "pytorch-ie>=0.16.0,<1.0.0",
+    "pytorch-ie>=0.17.0,<1.0.0",
     "asciidag",  # for visualization
 ]
 

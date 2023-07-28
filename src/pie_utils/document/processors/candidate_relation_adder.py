@@ -9,7 +9,6 @@ from typing import Any, Dict, List, TypeVar
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation
 from pytorch_ie.core import AnnotationList, Document
-from pytorch_ie.core.document import BaseAnnotationList
 from pytorch_ie.utils.span import is_contained_in
 
 from pie_utils.document.processors.common import EnterDatasetMixin, ExitDatasetMixin
@@ -18,14 +17,6 @@ from pie_utils.span.slice import distance
 logger = logging.getLogger(__name__)
 
 D = TypeVar("D", bound=Document)
-
-
-def target_layers(layer: BaseAnnotationList) -> dict[str, AnnotationList]:
-    return {
-        target_layer_name: layer._document[target_layer_name]
-        for target_layer_name in layer._targets
-        if target_layer_name in layer._document
-    }
 
 
 class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
@@ -149,13 +140,8 @@ class CandidateRelationAdder(EnterDatasetMixin, ExitDatasetMixin):
             available_partitions = document[self.partition_layer]
         else:
             available_partitions = [None]
-        rel_target_layers = target_layers(layer=rel_layer)
-        if not len(rel_target_layers) == 1:
-            raise ValueError(
-                f"Relation layer must have exactly one target layer but found the following target layers: "
-                f"{list(rel_target_layers)}"
-            )
-        entity_layer = list(rel_target_layers.values())[0]
+
+        entity_layer = rel_layer.target_layer
         if self.use_predictions:
             entity_layer = entity_layer.predictions
 
