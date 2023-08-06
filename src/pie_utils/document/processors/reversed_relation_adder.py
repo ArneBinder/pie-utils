@@ -8,8 +8,7 @@ from typing import TypeVar
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation
 from pytorch_ie.core import Document
-
-from .common import EnterDatasetMixin, ExitDatasetMixin
+from pytorch_ie.data.common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 

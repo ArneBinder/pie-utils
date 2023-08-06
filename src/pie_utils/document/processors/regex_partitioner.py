@@ -8,9 +8,8 @@ from typing import Any, Callable, Iterable, Iterator, Match, TypeVar
 
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import LabeledSpan
+from pytorch_ie.data.common import EnterDatasetMixin, ExitDatasetMixin
 from pytorch_ie.documents import TextBasedDocument
-
-from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 

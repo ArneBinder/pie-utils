@@ -8,10 +8,10 @@ from typing import Any, Dict, List, TypeVar
 
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import BinaryRelation
-from pytorch_ie.core import AnnotationList, Document
+from pytorch_ie.core import Document
+from pytorch_ie.data.common import EnterDatasetMixin, ExitDatasetMixin
 from pytorch_ie.utils.span import is_contained_in
 
-from pie_utils.document.processors.common import EnterDatasetMixin, ExitDatasetMixin
 from pie_utils.span.slice import distance
 
 logger = logging.getLogger(__name__)
