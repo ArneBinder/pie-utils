@@ -8,9 +8,8 @@ from typing import TypeVar
 from pytorch_ie import Dataset, IterableDataset
 from pytorch_ie.annotations import Span
 from pytorch_ie.core import Document
+from pytorch_ie.data.common import EnterDatasetMixin, ExitDatasetMixin
 from transformers import AutoTokenizer
-
-from .common import EnterDatasetMixin, ExitDatasetMixin
 
 logger = logging.getLogger(__name__)
 
