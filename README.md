@@ -21,5 +21,5 @@ pip install git+ssh://git@github.com/ArneBinder/pie-utils.git
 ```bash
 git clone https://github.com/ArneBinder/pie-utils
 cd pie-utils
-pip install -e ".[dev]
+pip install -e ".[dev]"
 ```
