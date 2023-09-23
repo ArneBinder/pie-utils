@@ -326,3 +326,67 @@ def test_get_partitions_with_matcher():
         for p in partitions:
             assert not have_overlap((p.start, p.end), (partition.start, partition.end))
         partitions.append(partition)
+
+
+@pytest.mark.parametrize(
+    "strip_whitespace, verbose",
+    [
+        (False, False),
+        (False, True),
+        (True, False),
+        (True, True),
+    ],
+)
+def test_regex_partitioner_with_strip_whitespace(strip_whitespace, verbose, caplog):
+    TEXT1 = (
+        "\nThis is initial text. Jane lives in Berlin. this is no sentence about Karl.\n"
+        "Seattle is a rainy city. Jenny Durkan is the city's mayor.\n\n"
+        "Karl enjoys sunny days in Berlin.\n"
+    )
+    regex_partitioner = RegexPartitioner(
+        pattern="\n",
+        strip_whitespace=strip_whitespace,
+        verbose=verbose,
+    )
+    document = DocumentWithPartitions(text=TEXT1)
+    new_document = regex_partitioner(document)
+
+    partitions = new_document.partitions
+    labels = [partition.label for partition in partitions]
+    if strip_whitespace:
+        assert len(partitions) == 3
+        assert labels == ["partition"] * len(partitions)
+        assert (
+            str(partitions[0])
+            == "This is initial text. Jane lives in Berlin. this is no sentence about Karl."
+        )
+        assert str(partitions[1]) == "Seattle is a rainy city. Jenny Durkan is the city's mayor."
+        assert str(partitions[2]) == "Karl enjoys sunny days in Berlin."
+        if verbose:
+            assert len(caplog.messages) == 3
+            assert caplog.messages[0] == (
+                "Found empty partition in text at [0:0] with potential label: 'partition'. It will be skipped."
+            )
+            assert caplog.messages[1] == (
+                "Found empty partition in text at [135:136] with potential label: 'partition'. It will be skipped."
+            )
+            assert caplog.messages[2] == (
+                "Found empty partition in text at [170:171] with potential label: 'partition'. It will be skipped."
+            )
+    else:
+        assert len(partitions) == 5
+        assert labels == ["partition"] * len(partitions)
+        assert (
+            str(partitions[0])
+            == "\nThis is initial text. Jane lives in Berlin. this is no sentence about Karl."
+        )
+        assert str(partitions[1]) == "\nSeattle is a rainy city. Jenny Durkan is the city's mayor."
+        assert str(partitions[2]) == "\n"
+        assert str(partitions[3]) == "\nKarl enjoys sunny days in Berlin."
+        assert str(partitions[4]) == "\n"
+        if verbose:
+            assert len(caplog.messages) == 1
+            assert (
+                caplog.messages[0]
+                == "Found empty partition in text at [0:0] with potential label: 'partition'. It will be skipped."
+            )
