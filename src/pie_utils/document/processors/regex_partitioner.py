@@ -21,6 +21,23 @@ def create_regex_matcher(pattern):
     return re.compile(pattern).finditer
 
 
+def strip_span(start: int, end: int, text: str) -> tuple[int, int]:
+    """This method strips the leading and trailing whitespaces from the span.
+
+    :param start: An integer value that represents the start index of the span.
+    :param end: An integer value that represents the end index of the span.
+    :param text: A string value that represents the text from which the span is extracted.
+    """
+    span_text = text[start:end]
+    new_start = start + len(span_text) - len(span_text.lstrip())
+    new_end = end - len(span_text) + len(span_text.rstrip())
+    # if the span is empty, then create a span of length 0 at the start index
+    if new_start >= new_end:
+        new_start = start
+        new_end = start
+    return new_start, new_end
+
+
 def _get_partitions_with_matcher(
     text: str,
     matcher_or_pattern: Callable[[str], Iterable[Match]] | str,
@@ -29,6 +46,8 @@ def _get_partitions_with_matcher(
     skip_initial_partition: bool = False,  # = True
     default_partition_label: str = "partition",
     initial_partition_label: str | None = None,
+    strip_whitespace: bool = False,
+    verbose: bool = True,
 ) -> Iterator[LabeledSpan]:
     """This method yields LabeledSpans as partitions of the given text. matcher is used to search
     for a pattern in the text. If the pattern is found, it returns a Match object that contains
@@ -77,17 +96,37 @@ def _get_partitions_with_matcher(
             label = default_partition_label
         if label_whitelist is None or label in label_whitelist:
             if previous_start is not None and previous_label is not None:
+                start = previous_start
                 end = match.start()
-                span = LabeledSpan(start=previous_start, end=end, label=previous_label)
-                yield span
+                if strip_whitespace:
+                    start, end = strip_span(start=start, end=end, text=text)
+                if end - start == 0:
+                    if verbose:
+                        logger.warning(
+                            f"Found empty partition in text at [{previous_start}:{match.start()}] "
+                            f"with potential label: '{previous_label}'. It will be skipped."
+                        )
+                else:
+                    span = LabeledSpan(start=start, end=end, label=previous_label)
+                    yield span
 
             previous_start = match.start()
             previous_label = label
 
     if previous_start is not None and previous_label is not None:
+        start = previous_start
         end = len(text)
-        span = LabeledSpan(start=previous_start, end=end, label=previous_label)
-        yield span
+        if strip_whitespace:
+            start, end = strip_span(start=start, end=end, text=text)
+        if end - start == 0:
+            if verbose:
+                logger.warning(
+                    f"Found empty partition in text at [{previous_start}:{len(text)}] with potential label: "
+                    f"'{previous_label}'. It will be skipped."
+                )
+        else:
+            span = LabeledSpan(start=start, end=end, label=previous_label)
+            yield span
 
 
 class RegexPartitioner(EnterDatasetMixin, ExitDatasetMixin):
