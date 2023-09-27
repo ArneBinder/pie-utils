@@ -104,50 +104,70 @@ def test_is_contained_in():
 
 
 def test_distance_center():
-    start_end = (0, 4)
-    other_start_end = (6, 10)
-    distance = distance_center(start_end, other_start_end)
+    distance = distance_center(start_end=(0, 4), other_start_end=(6, 10))
+    assert distance == 6.0
+    distance = distance_center(start_end=(6, 10), other_start_end=(0, 4))
     assert distance == 6.0
 
 
+def test_distance_center_with_overlap():
+    # center0 = (0 + 4) / 2  # 2
+    # center1 = (2 + 6) / 2  # 4
+    distance = distance_center(start_end=(0, 4), other_start_end=(2, 6))
+    assert distance == 2.0
+
+    # center0 = (0 + 6) / 2  # 3
+    # center1 = (1 + 2) / 2  # 1.5
+    distance = distance_center(start_end=(0, 6), other_start_end=(1, 2))
+    assert distance == 1.5
+
+
 def test_distance_outer():
-    start_end = (0, 4)
-    other_start_end = (6, 10)
-    distance = distance_outer(start_end, other_start_end)
+    distance = distance_outer(start_end=(0, 4), other_start_end=(6, 10))
+    assert distance == 10.0
+    distance = distance_outer(start_end=(6, 10), other_start_end=(0, 4))
     assert distance == 10.0
 
 
-def test_distance_inner():
-    start_end = (0, 4)
-    other_start_end = (2, 6)
-    with pytest.raises(AssertionError) as e:
-        distance_inner(start_end, other_start_end)
-        assert e.value == "can not calculate inner span distance for overlapping spans"
+def test_distance_outer_with_overlap():
+    distance = distance_outer(start_end=(0, 4), other_start_end=(2, 6))
+    assert distance == 6.0
 
-    start_end = (0, 4)
-    other_start_end = (4, 6)
-    distance = distance_inner(start_end, other_start_end)
+    distance = distance_outer(start_end=(0, 6), other_start_end=(1, 2))
+    assert distance == 6.0
+
+
+def test_distance_inner():
+    distance = distance_inner(start_end=(0, 4), other_start_end=(4, 6))
     assert distance == 0
 
-    start_end = (4, 6)
-    other_start_end = (0, 3)
-    distance = distance_inner(start_end, other_start_end)
+    distance = distance_inner(start_end=(4, 6), other_start_end=(0, 3))
     assert distance == 1
 
 
-@pytest.mark.parametrize("distance_type", ["inner", "outer", "center", "up"])
+def test_distance_inner_with_overlap():
+    # distance = distance_inner(start_end=(0, 4), other_start_end=(2, 6))
+    # assert distance == -2
+
+    # distance = distance_inner(start_end=(0, 6), other_start_end=(1, 2))
+    # assert distance == -2
+    with pytest.raises(AssertionError) as e:
+        distance_inner(start_end=(0, 4), other_start_end=(2, 6))
+    assert str(e.value) == "can not calculate inner span distance for overlapping spans"
+
+
+def test_distance_unknown():
+    with pytest.raises(ValueError) as e:
+        distance(start_end=(0, 4), other_start_end=(6, 10), distance_type="unknown")
+        assert e.value == "unknown distance_type=unknown. use one of: center, inner, outer"
+
+
+@pytest.mark.parametrize("distance_type", ["inner", "outer", "center"])
 def test_distance(distance_type):
-    start_end = (0, 4)
-    other_start_end = (6, 10)
-    if distance_type == "up":
-        with pytest.raises(ValueError) as e:
-            distance(start_end, other_start_end, distance_type)
-            assert e.value == "unknown distance_type=up. use one of: center, inner, outer"
+    distance_ = distance(start_end=(0, 4), other_start_end=(6, 10), distance_type=distance_type)
+    if distance_type == "inner":
+        assert distance_ == 2.0
+    elif distance_type == "outer":
+        assert distance_ == 10.0
     else:
-        distance_ = distance(start_end, other_start_end, distance_type)
-        if distance_type == "inner":
-            assert distance_ == 2.0
-        elif distance_type == "outer":
-            assert distance_ == 10.0
-        else:
-            assert distance_ == 6.0
+        assert distance_ == 6.0
