@@ -138,11 +138,14 @@ def test_distance_outer_with_overlap():
 
 
 def test_distance_inner():
-    distance = distance_inner(start_end=(0, 4), other_start_end=(4, 6))
-    assert distance == 0
-
     distance = distance_inner(start_end=(4, 6), other_start_end=(0, 3))
     assert distance == 1
+
+    distance = distance_inner(start_end=(0, 3), other_start_end=(4, 6))
+    assert distance == 1
+
+    distance = distance_inner(start_end=(0, 4), other_start_end=(4, 6))
+    assert distance == 0
 
 
 def test_distance_inner_with_overlap():
