@@ -24,26 +24,30 @@ def is_contained_in(start_end: Tuple[int, int], other_start_end: Tuple[int, int]
 
 
 def distance_center(start_end: Tuple[int, int], other_start_end: Tuple[int, int]) -> float:
-    return abs((start_end[0] + start_end[1]) / 2 - (other_start_end[0] + other_start_end[1]) / 2)
+    center = (start_end[0] + start_end[1]) / 2
+    center_other = (other_start_end[0] + other_start_end[1]) / 2
+    return abs(center - center_other)
 
 
 def distance_outer(start_end: Tuple[int, int], other_start_end: Tuple[int, int]) -> float:
     _max = max(start_end[0], start_end[1], other_start_end[0], other_start_end[1])
     _min = min(start_end[0], start_end[1], other_start_end[0], other_start_end[1])
-    return _max - _min
+    return float(_max - _min)
 
 
 def distance_inner(start_end: Tuple[int, int], other_start_end: Tuple[int, int]) -> float:
-    assert not have_overlap(
-        start_end, other_start_end
-    ), "can not calculate inner span distance for overlapping spans"
-    if start_end[0] < other_start_end[0]:
-        return other_start_end[0] - start_end[1]
+    dist_start_other_end = abs(start_end[0] - other_start_end[1])
+    dist_end_other_start = abs(start_end[1] - other_start_end[0])
+    dist = float(min(dist_start_other_end, dist_end_other_start))
+    if not have_overlap(start_end, other_start_end):
+        return dist
     else:
-        return start_end[0] - other_start_end[1]
+        return -dist
 
 
-def distance(start_end: Tuple[int, int], other_start_end: Tuple[int, int], distance_type: str):
+def distance(
+    start_end: Tuple[int, int], other_start_end: Tuple[int, int], distance_type: str
+) -> float:
     if distance_type == "center":
         return distance_center(start_end, other_start_end)
     elif distance_type == "inner":
