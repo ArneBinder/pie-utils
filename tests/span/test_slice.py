@@ -149,14 +149,14 @@ def test_distance_inner():
 
 
 def test_distance_inner_with_overlap():
-    # distance = distance_inner(start_end=(0, 4), other_start_end=(2, 6))
-    # assert distance == -2
+    distance = distance_inner(start_end=(0, 4), other_start_end=(2, 6))
+    assert distance == -2
 
-    # distance = distance_inner(start_end=(0, 6), other_start_end=(1, 2))
-    # assert distance == -2
-    with pytest.raises(AssertionError) as e:
-        distance_inner(start_end=(0, 4), other_start_end=(2, 6))
-    assert str(e.value) == "can not calculate inner span distance for overlapping spans"
+    distance = distance_inner(start_end=(0, 6), other_start_end=(1, 2))
+    assert distance == -2
+
+    distance = distance_inner(start_end=(0, 4), other_start_end=(4, 6))
+    assert distance == 0
 
 
 def test_distance_unknown():
