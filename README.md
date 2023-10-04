@@ -2,8 +2,6 @@
 
 # pie-utils
 
-<a href="https://pytorch.org/get-started/locally/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white"></a>
-<a href="https://pytorchlightning.ai/"><img alt="Lightning" src="https://img.shields.io/badge/-Lightning-792ee5?logo=pytorchlightning&logoColor=white"></a>
 <a href="https://github.com/ChristophAlt/pytorch-ie"><img alt="PyTorch-IE" src="https://img.shields.io/badge/-PyTorch--IE-017F2F?style=flat&logo=github&labelColor=gray"></a><br>
 
 <!-- [![PyPI](https://img.shields.io/pypi/v/pie-utils.svg)][pypi status] -->
@@ -75,6 +73,6 @@ pytest --cov --cov-report term-missing
    4. When everything looks fine, click on "Publish release" to publish the release.
 
 [black]: https://github.com/psf/black
-[codecov]: https://app.codecov.io/gh/arnebinder/pie-models
+[codecov]: https://app.codecov.io/gh/arnebinder/pie-utils
 [pre-commit]: https://github.com/pre-commit/pre-commit
-[tests]: https://github.com/arnebinder/pie-models/actions?workflow=Tests
+[tests]: https://github.com/arnebinder/pie-utils/actions?workflow=Tests
