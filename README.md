@@ -2,6 +2,17 @@
 
 # pie-utils
 
+<a href="https://pytorch.org/get-started/locally/"><img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white"></a>
+<a href="https://pytorchlightning.ai/"><img alt="Lightning" src="https://img.shields.io/badge/-Lightning-792ee5?logo=pytorchlightning&logoColor=white"></a>
+<a href="https://github.com/ChristophAlt/pytorch-ie"><img alt="PyTorch-IE" src="https://img.shields.io/badge/-PyTorch--IE-017F2F?style=flat&logo=github&labelColor=gray"></a><br>
+
+<!-- [![PyPI](https://img.shields.io/pypi/v/pie-utils.svg)][pypi status] -->
+
+[![Tests](https://github.com/arnebinder/pie-utils/workflows/Tests/badge.svg)][tests]
+[![Codecov](https://codecov.io/gh/arnebinder/pie-utils/branch/main/graph/badge.svg)][codecov]
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
+[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
+
 A collection of utilities to ease the usage of [pytorch-ie](https://github.com/ChristophAlt/pytorch-ie).
 
 ## Setup
@@ -62,3 +73,8 @@ pytest --cov --cov-report term-missing
    2. You can choose an appropriate release title.
    3. Click on "Generate release notes" to generate the release notes from the pull request descriptions.
    4. When everything looks fine, click on "Publish release" to publish the release.
+
+[black]: https://github.com/psf/black
+[codecov]: https://app.codecov.io/gh/arnebinder/pie-models
+[pre-commit]: https://github.com/pre-commit/pre-commit
+[tests]: https://github.com/arnebinder/pie-models/actions?workflow=Tests
